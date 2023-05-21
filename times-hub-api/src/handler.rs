@@ -2,6 +2,7 @@ use anyhow::Result;
 use axum::async_trait;
 use axum::extract::Extension;
 use axum::extract::FromRequest;
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::BoxError;
@@ -11,6 +12,8 @@ use serde::de::DeserializeOwned;
 use std::sync::Arc;
 use validator::Validate;
 
+use crate::entity;
+use crate::repository::RepositoryError;
 use crate::repository::WorkspaceRepository;
 use crate::service;
 
@@ -37,6 +40,23 @@ where
     let ws_vec = service::all_workspaces(repo)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok((StatusCode::OK, Json(ws_vec)))
+}
+
+pub async fn find_workspace<T>(
+    Extension(repo): Extension<Arc<T>>,
+    Path(id): Path<entity::WorkspaceId>,
+) -> Result<impl IntoResponse, StatusCode>
+where
+    T: WorkspaceRepository,
+{
+    let ws_vec = service::find_workspace(repo, id).await.map_err(|e| {
+        tracing::error!("error: {}", e);
+        match e.downcast_ref::<RepositoryError>() {
+            Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    })?;
     Ok((StatusCode::OK, Json(ws_vec)))
 }
 

@@ -3,14 +3,21 @@ use crate::service::CreateWorkspacePayload;
 
 use anyhow::Result;
 use axum::async_trait;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum RepositoryError {
+    #[error("NotFound! ID is {0}")]
+    NotFound(entity::WorkspaceId),
+}
 
 #[async_trait]
 pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + 'static {
     async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace>;
 
-    // async fn find(&self, id: entity::TodoTaskId) -> Result<Todo>;
-
     async fn all(&self) -> Result<Vec<entity::Workspace>>;
+
+    async fn find(&self, id: entity::WorkspaceId) -> Result<entity::Workspace>;
 
     // async fn update(&self, id: entity::TodoTaskId, payload: UpdateWorkspace) -> Result<Todo>;
 
@@ -84,6 +91,12 @@ pub mod test_utils {
             let ws_vec = store.values().map(|ws| ws.clone()).collect();
             Ok(ws_vec)
         }
+
+        async fn find(&self, id: entity::WorkspaceId) -> Result<entity::Workspace> {
+            let store = self.read_store_ref();
+            let ws = store.get(&id).ok_or(RepositoryError::NotFound(id))?;
+            Ok(ws.clone())
+        }
     }
 
     #[cfg(test)]
@@ -141,6 +154,13 @@ pub mod test_utils {
                 webhook_url: manipulate_target_data.webhook_url.clone(),
             };
             let ws = repo.create(payload).await.expect("failed to create todo");
+            assert_eq!(ws, manipulate_target_data);
+
+            // find
+            let ws = repo
+                .find(manipulate_target_data.id)
+                .await
+                .expect("failed to find todo");
             assert_eq!(ws, manipulate_target_data);
 
             // all

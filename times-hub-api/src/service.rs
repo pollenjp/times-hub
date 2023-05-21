@@ -10,6 +10,7 @@ use validator::Validate;
 pub struct ResponseWorkspace {
     id: entity::WorkspaceId,
     name: String,
+    ws_type: String,
 }
 
 // workspace の作成の POST request body
@@ -35,6 +36,7 @@ where
     Ok(ResponseWorkspace {
         id: ws.id,
         name: ws.name,
+        ws_type: ws.ws_type.to_string(),
     })
 }
 
@@ -50,7 +52,20 @@ where
         .map(|ws| ResponseWorkspace {
             id: ws.id,
             name: ws.name,
+            ws_type: ws.ws_type.to_string(),
         })
         .collect();
     Ok(ws_vec)
+}
+
+pub async fn find_workspace<T>(repo: Arc<T>, id: entity::WorkspaceId) -> Result<ResponseWorkspace>
+where
+    T: WorkspaceRepository,
+{
+    let ws = repo.find(id).await?;
+    Ok(ResponseWorkspace {
+        id: ws.id,
+        name: ws.name,
+        ws_type: ws.ws_type.to_string(),
+    })
 }
