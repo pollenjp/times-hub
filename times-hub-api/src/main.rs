@@ -1,3 +1,6 @@
+mod entity;
+mod repository;
+
 use axum::routing::get;
 use axum::Router;
 use dotenv::dotenv;
