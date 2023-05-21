@@ -88,14 +88,14 @@ where
             .map_err(|_| StatusCode::BAD_REQUEST)?,
         webhook_url: payload.webhook_url,
     };
-    let ws_vec = service::update_workspace(repo, ws).await.map_err(|e| {
+    let ws = service::update_workspace(repo, ws).await.map_err(|e| {
         tracing::error!("error: {}", e);
         match e.downcast_ref::<RepositoryError>() {
             Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     })?;
-    Ok((StatusCode::CREATED, Json(ws_vec)))
+    Ok((StatusCode::CREATED, Json(ws)))
 }
 
 #[derive(Debug)]
