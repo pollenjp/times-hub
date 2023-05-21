@@ -40,7 +40,7 @@ where
     let ws_vec = service::create_workspace(repo, payload)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok((StatusCode::OK, Json(ws_vec)))
+    Ok((StatusCode::CREATED, Json(ws_vec)))
 }
 
 // request から抽出し, service のビジネスロジックに委ねる関数
@@ -95,7 +95,7 @@ where
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     })?;
-    Ok((StatusCode::OK, Json(ws_vec)))
+    Ok((StatusCode::CREATED, Json(ws_vec)))
 }
 
 #[derive(Debug)]
