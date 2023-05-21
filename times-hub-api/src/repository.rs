@@ -3,7 +3,6 @@ use crate::service::CreateWorkspacePayload;
 
 use anyhow::Result;
 use axum::async_trait;
-use entity::Workspace;
 
 #[async_trait]
 pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + 'static {
@@ -11,7 +10,7 @@ pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + '
 
     // async fn find(&self, id: entity::TodoTaskId) -> Result<Todo>;
 
-    async fn all(&self) -> Result<Vec<Workspace>>;
+    async fn all(&self) -> Result<Vec<entity::Workspace>>;
 
     // async fn update(&self, id: entity::TodoTaskId, payload: UpdateWorkspace) -> Result<Todo>;
 
@@ -29,7 +28,7 @@ pub mod test_utils {
     use std::sync::RwLockReadGuard;
     use std::sync::RwLockWriteGuard;
 
-    impl Workspace {
+    impl entity::Workspace {
         pub fn new(
             id: entity::WorkspaceId,
             name: String,
@@ -45,7 +44,7 @@ pub mod test_utils {
         }
     }
 
-    type WorkspaceDBOnMemory = HashMap<entity::WorkspaceId, Workspace>;
+    type WorkspaceDBOnMemory = HashMap<entity::WorkspaceId, entity::Workspace>;
 
     // オンメモリのリポジトリ
     #[derive(Clone, Debug)]
@@ -75,12 +74,12 @@ pub mod test_utils {
             let mut store = self.write_store_ref();
             let id = store.len() as entity::WorkspaceId + 1;
             let ws_type = entity::WorkspaceType::from_str(payload.ws_type.as_str())?;
-            let ws = Workspace::new(id, payload.name, ws_type, payload.webhook_url);
+            let ws = entity::Workspace::new(id, payload.name, ws_type, payload.webhook_url);
             store.insert(id, ws.clone());
             Ok(ws)
         }
 
-        async fn all(&self) -> Result<Vec<Workspace>> {
+        async fn all(&self) -> Result<Vec<entity::Workspace>> {
             let store = self.read_store_ref();
             let ws_vec = store.values().map(|ws| ws.clone()).collect();
             Ok(ws_vec)
@@ -92,14 +91,14 @@ pub mod test_utils {
         use super::*;
 
         // vector の比較で sort 用に実装
-        impl PartialOrd for Workspace {
+        impl PartialOrd for entity::Workspace {
             fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
                 Some(self.cmp(other))
             }
         }
 
         // vector の比較で sort 用に実装
-        impl Ord for Workspace {
+        impl Ord for entity::Workspace {
             fn cmp(&self, other: &Self) -> std::cmp::Ordering {
                 self.id.cmp(&other.id)
             }
@@ -109,13 +108,13 @@ pub mod test_utils {
         async fn todo_crud_scenario() {
             // 初期データ
             let init_ws_vec = vec![
-                Workspace::new(
+                entity::Workspace::new(
                     1,
                     "test workspace 1".to_string(),
                     entity::WorkspaceType::Slack,
                     "https://example.com".to_string(),
                 ),
-                Workspace::new(
+                entity::Workspace::new(
                     2,
                     "test workspace 2".to_string(),
                     entity::WorkspaceType::Slack,
@@ -130,7 +129,7 @@ pub mod test_utils {
             }
 
             // create
-            let manipulate_target_data = Workspace {
+            let manipulate_target_data = entity::Workspace {
                 id: 3,
                 name: "test workspace 3".to_string(),
                 ws_type: entity::WorkspaceType::Slack,
