@@ -1,7 +1,8 @@
 pub type WorkspaceId = u32;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::EnumString)]
 pub enum WorkspaceType {
+    #[strum(serialize = "slack")]
     Slack,
     // Discord, // NotImplemented
 }

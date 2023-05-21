@@ -1,4 +1,5 @@
 use crate::entity;
+use crate::service::CreateWorkspacePayload;
 
 use anyhow::Result;
 use axum::async_trait;
@@ -6,7 +7,7 @@ use entity::Workspace;
 
 #[async_trait]
 pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + 'static {
-    // async fn create(&self, payload: CreateWorkspace) -> Result<Todo>;
+    async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace>;
 
     // async fn find(&self, id: entity::TodoTaskId) -> Result<Todo>;
 
@@ -22,17 +23,23 @@ pub mod test_utils {
     use super::*;
     use axum::async_trait;
     use std::collections::HashMap;
+    use std::str::FromStr;
     use std::sync::Arc;
     use std::sync::RwLock;
     use std::sync::RwLockReadGuard;
     use std::sync::RwLockWriteGuard;
 
     impl Workspace {
-        pub fn new(id: entity::WorkspaceId, name: String, webhook_url: String) -> Self {
+        pub fn new(
+            id: entity::WorkspaceId,
+            name: String,
+            ws_type: entity::WorkspaceType,
+            webhook_url: String,
+        ) -> Self {
             Self {
                 id,
                 name,
-                ws_type: entity::WorkspaceType::Slack,
+                ws_type,
                 webhook_url,
             }
         }
@@ -64,6 +71,15 @@ pub mod test_utils {
 
     #[async_trait]
     impl WorkspaceRepository for WorkspaceRepositoryForMemory {
+        async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace> {
+            let mut store = self.write_store_ref();
+            let id = store.len() as entity::WorkspaceId + 1;
+            let ws_type = entity::WorkspaceType::from_str(payload.ws_type.as_str())?;
+            let ws = Workspace::new(id, payload.name, ws_type, payload.webhook_url);
+            store.insert(id, ws.clone());
+            Ok(ws)
+        }
+
         async fn all(&self) -> Result<Vec<Workspace>> {
             let store = self.read_store_ref();
             let ws_vec = store.values().map(|ws| ws.clone()).collect();
@@ -91,25 +107,21 @@ pub mod test_utils {
 
         #[tokio::test]
         async fn todo_crud_scenario() {
-            // TODO: 初期データ
+            // 初期データ
             let init_ws_vec = vec![
                 Workspace::new(
                     1,
                     "test workspace 1".to_string(),
+                    entity::WorkspaceType::Slack,
                     "https://example.com".to_string(),
                 ),
                 Workspace::new(
                     2,
                     "test workspace 2".to_string(),
+                    entity::WorkspaceType::Slack,
                     "https://example.com".to_string(),
                 ),
             ];
-
-            // let manipulate_target_data = Workspace {
-            //     id: 3,
-            //     name: "test workspace 3".to_string(),
-            //     webhook_url: "https://example.com".to_string(),
-            // };
 
             let repo = WorkspaceRepositoryForMemory::new();
             // Add init data
@@ -117,9 +129,25 @@ pub mod test_utils {
                 repo.write_store_ref().insert(data.id, data.clone());
             }
 
+            // create
+            let manipulate_target_data = Workspace {
+                id: 3,
+                name: "test workspace 3".to_string(),
+                ws_type: entity::WorkspaceType::Slack,
+                webhook_url: "https://example.com".to_string(),
+            };
+            let payload = CreateWorkspacePayload {
+                name: manipulate_target_data.name.clone(),
+                ws_type: manipulate_target_data.ws_type.to_string(),
+                webhook_url: manipulate_target_data.webhook_url.clone(),
+            };
+            let ws = repo.create(payload).await.expect("failed to create todo");
+            assert_eq!(ws, manipulate_target_data);
+
             // all
             let mut ws_vec = repo.all().await.expect("failed to get all todo");
             let mut expected_ws_vec = init_ws_vec.clone();
+            expected_ws_vec.push(manipulate_target_data.clone());
             assert_eq!(ws_vec.sort(), expected_ws_vec.sort());
         }
     }

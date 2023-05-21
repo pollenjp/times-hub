@@ -3,7 +3,7 @@ mod handler;
 mod repository;
 mod service;
 
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::Extension;
 use axum::Router;
 use dotenv::dotenv;
@@ -42,7 +42,10 @@ where
 {
     Router::new()
         .route("/", get(root))
-        .route("/workspaces", get(handler::all_workspaces::<T>))
+        .route(
+            "/workspaces",
+            post(handler::create_workspace::<T>).get(handler::all_workspaces::<T>),
+        )
         .layer(Extension(Arc::new(repo)))
 }
 
