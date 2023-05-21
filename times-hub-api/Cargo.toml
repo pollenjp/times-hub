@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1.0.71"
 axum = "0.6.18"
 dotenv = "0.15.0"
+http = "0.2.9"
 hyper = { version = "0.14.26", features = ["full"] }
 mime = "0.3.17"
 serde = { version = "1.0.163", features = ["derive"] }
