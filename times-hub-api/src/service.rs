@@ -1,8 +1,6 @@
 use crate::entity;
-use crate::repository;
-
+use crate::repository::WorkspaceRepository;
 use anyhow::Result;
-use repository::WorkspaceRepository;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;
