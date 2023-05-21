@@ -1,6 +1,6 @@
 use crate::entity;
 use crate::service::CreateWorkspacePayload;
-
+use anyhow::Context;
 use anyhow::Result;
 use axum::async_trait;
 use thiserror::Error;
@@ -100,6 +100,12 @@ pub mod test_utils {
 
         async fn update(&self, payload: entity::Workspace) -> Result<entity::Workspace> {
             let mut store = self.write_store_ref();
+
+            // check if exists
+            store
+                .get(&payload.id)
+                .context(RepositoryError::NotFound(payload.id))?;
+
             store.insert(payload.id, payload.clone());
             Ok(payload)
         }
