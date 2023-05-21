@@ -32,6 +32,7 @@ pub mod test_utils {
             Self {
                 id,
                 name,
+                ws_type: entity::WorkspaceType::Slack,
                 webhook_url,
             }
         }
