@@ -1,3 +1,7 @@
+use crate::entity;
+use crate::repository::RepositoryError;
+use crate::repository::WorkspaceRepository;
+use crate::service;
 use anyhow::Result;
 use axum::async_trait;
 use axum::extract::Extension;
@@ -9,13 +13,22 @@ use axum::BoxError;
 use axum::Json;
 use http::Request;
 use serde::de::DeserializeOwned;
+use serde::Deserialize;
+use serde::Serialize;
+use std::str::FromStr;
 use std::sync::Arc;
 use validator::Validate;
 
-use crate::entity;
-use crate::repository::RepositoryError;
-use crate::repository::WorkspaceRepository;
-use crate::service;
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
+pub struct UpdateWorkspacePayload {
+    #[validate(length(min = 1, message = "text can not be empty"))]
+    #[validate(length(max = 100, message = "text can not be longer than 100 characters"))]
+    pub name: String,
+    #[validate(length(min = 1, message = "text can not be empty"))]
+    pub ws_type: String,
+    #[validate(length(min = 1, message = "text can not be empty"))]
+    pub webhook_url: String,
+}
 
 pub async fn create_workspace<T>(
     Extension(repo): Extension<Arc<T>>,
@@ -51,6 +64,31 @@ where
     T: WorkspaceRepository,
 {
     let ws_vec = service::find_workspace(repo, id).await.map_err(|e| {
+        tracing::error!("error: {}", e);
+        match e.downcast_ref::<RepositoryError>() {
+            Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    })?;
+    Ok((StatusCode::OK, Json(ws_vec)))
+}
+
+pub async fn update_workspace<T>(
+    Extension(repo): Extension<Arc<T>>,
+    Path(id): Path<entity::WorkspaceId>,
+    ValidatedJson(payload): ValidatedJson<UpdateWorkspacePayload>,
+) -> Result<impl IntoResponse, StatusCode>
+where
+    T: WorkspaceRepository,
+{
+    let ws = entity::Workspace {
+        id,
+        name: payload.name,
+        ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str())
+            .map_err(|_| StatusCode::BAD_REQUEST)?,
+        webhook_url: payload.webhook_url,
+    };
+    let ws_vec = service::update_workspace(repo, ws).await.map_err(|e| {
         tracing::error!("error: {}", e);
         match e.downcast_ref::<RepositoryError>() {
             Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,

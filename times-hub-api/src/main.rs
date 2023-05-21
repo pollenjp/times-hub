@@ -46,7 +46,10 @@ where
             "/workspaces",
             post(handler::create_workspace::<T>).get(handler::all_workspaces::<T>),
         )
-        .route("/workspaces/:id", get(handler::find_workspace::<T>))
+        .route(
+            "/workspaces/:id",
+            get(handler::find_workspace::<T>).patch(handler::update_workspace::<T>),
+        )
         .layer(Extension(Arc::new(repo)))
 }
 

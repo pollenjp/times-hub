@@ -19,7 +19,7 @@ pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + '
 
     async fn find(&self, id: entity::WorkspaceId) -> Result<entity::Workspace>;
 
-    // async fn update(&self, id: entity::TodoTaskId, payload: UpdateWorkspace) -> Result<Todo>;
+    async fn update(&self, payload: entity::Workspace) -> Result<entity::Workspace>;
 
     // async fn delete(&self, id: entity::TodoTaskId) -> Result<()>;
 }
@@ -97,6 +97,12 @@ pub mod test_utils {
             let ws = store.get(&id).ok_or(RepositoryError::NotFound(id))?;
             Ok(ws.clone())
         }
+
+        async fn update(&self, payload: entity::Workspace) -> Result<entity::Workspace> {
+            let mut store = self.write_store_ref();
+            store.insert(payload.id, payload.clone());
+            Ok(payload)
+        }
     }
 
     #[cfg(test)]
@@ -168,6 +174,19 @@ pub mod test_utils {
             let mut expected_ws_vec = init_ws_vec.clone();
             expected_ws_vec.push(manipulate_target_data.clone());
             assert_eq!(ws_vec.sort(), expected_ws_vec.sort());
+
+            /////////////////
+            // test update //
+            /////////////////
+
+            let mut updated_ws = manipulate_target_data.clone();
+            updated_ws.name = "updated name".to_string();
+
+            let ws = repo
+                .update(updated_ws.clone())
+                .await
+                .expect("failed to update todo");
+            assert_eq!(ws, updated_ws);
         }
     }
 }

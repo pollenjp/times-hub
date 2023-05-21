@@ -13,6 +13,10 @@ pub struct ResponseWorkspace {
     ws_type: String,
 }
 
+/////////////
+// Payload //
+/////////////
+
 // workspace の作成の POST request body
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
 pub struct CreateWorkspacePayload {
@@ -63,6 +67,18 @@ where
     T: WorkspaceRepository,
 {
     let ws = repo.find(id).await?;
+    Ok(ResponseWorkspace {
+        id: ws.id,
+        name: ws.name,
+        ws_type: ws.ws_type.to_string(),
+    })
+}
+
+pub async fn update_workspace<T>(repo: Arc<T>, ws: entity::Workspace) -> Result<ResponseWorkspace>
+where
+    T: WorkspaceRepository,
+{
+    let ws = repo.update(ws).await?;
     Ok(ResponseWorkspace {
         id: ws.id,
         name: ws.name,
