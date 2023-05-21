@@ -21,7 +21,7 @@ pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + '
 
     async fn update(&self, payload: entity::Workspace) -> Result<entity::Workspace>;
 
-    // async fn delete(&self, id: entity::TodoTaskId) -> Result<()>;
+    async fn delete(&self, id: entity::WorkspaceId) -> Result<()>;
 }
 
 // #[cfg(test)]
@@ -109,6 +109,12 @@ pub mod test_utils {
             store.insert(payload.id, payload.clone());
             Ok(payload)
         }
+
+        async fn delete(&self, id: entity::WorkspaceId) -> Result<()> {
+            let mut store = self.write_store_ref();
+            store.remove(&id).context(RepositoryError::NotFound(id))?;
+            Ok(())
+        }
     }
 
     #[cfg(test)]
@@ -193,6 +199,16 @@ pub mod test_utils {
                 .await
                 .expect("failed to update todo");
             assert_eq!(ws, updated_ws);
+
+            /////////////////
+            // test delete //
+            /////////////////
+
+            repo.delete(manipulate_target_data.id)
+                .await
+                .expect("failed to delete todo");
+            let mut ws_vec = repo.all().await.expect("failed to get all todo");
+            assert_eq!(ws_vec.sort(), init_ws_vec.clone().sort());
         }
     }
 }

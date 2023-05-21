@@ -39,7 +39,7 @@ where
 {
     let ws_vec = service::create_workspace(repo, payload)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(repository_error_to_status_code)?;
     Ok((StatusCode::CREATED, Json(ws_vec)))
 }
 
@@ -52,7 +52,7 @@ where
 {
     let ws_vec = service::all_workspaces(repo)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(repository_error_to_status_code)?;
     Ok((StatusCode::OK, Json(ws_vec)))
 }
 
@@ -63,13 +63,9 @@ pub async fn find_workspace<T>(
 where
     T: WorkspaceRepository,
 {
-    let ws_vec = service::find_workspace(repo, id).await.map_err(|e| {
-        tracing::error!("error: {}", e);
-        match e.downcast_ref::<RepositoryError>() {
-            Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    })?;
+    let ws_vec = service::find_workspace(repo, id)
+        .await
+        .map_err(repository_error_to_status_code)?;
     Ok((StatusCode::OK, Json(ws_vec)))
 }
 
@@ -96,6 +92,20 @@ where
         }
     })?;
     Ok((StatusCode::CREATED, Json(ws)))
+}
+
+pub async fn delete_workspace<T>(
+    Extension(repo): Extension<Arc<T>>,
+    Path(id): Path<entity::WorkspaceId>,
+) -> StatusCode
+where
+    T: WorkspaceRepository,
+{
+    service::delete_workspace(repo, id)
+        .await
+        .map(|_| StatusCode::NO_CONTENT)
+        .map_err(repository_error_to_status_code)
+        .unwrap_or_else(|e| e)
 }
 
 #[derive(Debug)]
@@ -125,5 +135,13 @@ where
             (StatusCode::BAD_REQUEST, message)
         })?;
         Ok(ValidatedJson(value))
+    }
+}
+
+fn repository_error_to_status_code(e: anyhow::Error) -> StatusCode {
+    tracing::error!("error: {}", e);
+    match e.downcast_ref::<RepositoryError>() {
+        Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }

@@ -48,7 +48,9 @@ where
         )
         .route(
             "/workspaces/:id",
-            get(handler::find_workspace::<T>).patch(handler::update_workspace::<T>),
+            get(handler::find_workspace::<T>)
+                .patch(handler::update_workspace::<T>)
+                .delete(handler::delete_workspace::<T>),
         )
         .layer(Extension(Arc::new(repo)))
 }

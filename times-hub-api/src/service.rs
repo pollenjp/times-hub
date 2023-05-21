@@ -85,3 +85,11 @@ where
         ws_type: ws.ws_type.to_string(),
     })
 }
+
+pub async fn delete_workspace<T>(repo: Arc<T>, id: entity::WorkspaceId) -> Result<()>
+where
+    T: WorkspaceRepository,
+{
+    repo.delete(id).await?;
+    Ok(())
+}
