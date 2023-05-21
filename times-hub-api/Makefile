@@ -7,7 +7,7 @@ debug-vars:
 
 .PHNEY: dev
 dev:
-	cargo watch -x run
+	RUST_LOG="debug" cargo watch -x run
 
 .PHNEY: test
 test:
