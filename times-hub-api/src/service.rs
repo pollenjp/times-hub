@@ -13,7 +13,7 @@ pub struct ResponseWorkspace {
     name: String,
 }
 
-pub async fn all_workspace<T>(repo: Arc<T>) -> Result<Vec<ResponseWorkspace>>
+pub async fn all_workspaces<T>(repo: Arc<T>) -> Result<Vec<ResponseWorkspace>>
 where
     T: WorkspaceRepository,
 {

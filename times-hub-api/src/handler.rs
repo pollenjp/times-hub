@@ -15,7 +15,7 @@ pub async fn all_workspaces<T>(
 where
     T: WorkspaceRepository,
 {
-    let ws_vec = service::all_workspace(repo)
+    let ws_vec = service::all_workspaces(repo)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok((StatusCode::OK, Json(ws_vec)))
