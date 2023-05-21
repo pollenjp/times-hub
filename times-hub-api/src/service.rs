@@ -18,7 +18,9 @@ pub struct CreateWorkspacePayload {
     #[validate(length(min = 1, message = "text can not be empty"))]
     #[validate(length(max = 100, message = "text can not be longer than 100 characters"))]
     pub name: String,
+    #[validate(length(min = 1, message = "text can not be empty"))]
     pub ws_type: String,
+    #[validate(length(min = 1, message = "text can not be empty"))]
     pub webhook_url: String,
 }
 
