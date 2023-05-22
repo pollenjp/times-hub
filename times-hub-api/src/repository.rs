@@ -3,12 +3,25 @@ use crate::service::CreateWorkspacePayload;
 use anyhow::Context;
 use anyhow::Result;
 use axum::async_trait;
+use sqlx::postgres::PgPool;
+use sqlx::FromRow;
+use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum RepositoryError {
+    #[error("Unexpected Error: {0}")]
+    Unexpected(String),
     #[error("NotFound! ID is {0}")]
     NotFound(entity::WorkspaceId),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, FromRow)]
+pub struct WorkspaceDBRow {
+    pub id: entity::WorkspaceId,
+    pub name: String,
+    pub ws_type: String,
+    pub webhook_url: String,
 }
 
 #[async_trait]
@@ -22,6 +35,130 @@ pub trait WorkspaceRepository: Clone + std::marker::Send + std::marker::Sync + '
     async fn update(&self, payload: entity::Workspace) -> Result<entity::Workspace>;
 
     async fn delete(&self, id: entity::WorkspaceId) -> Result<()>;
+}
+
+pub mod pg {
+    use super::*;
+    use axum::async_trait;
+
+    #[derive(Debug, Clone)]
+    pub struct WorkspaceRepositoryForDB {
+        pool: PgPool,
+    }
+
+    impl WorkspaceRepositoryForDB {
+        pub fn new(pool: PgPool) -> Self {
+            Self { pool }
+        }
+    }
+
+    #[async_trait]
+    impl WorkspaceRepository for WorkspaceRepositoryForDB {
+        async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace> {
+            let ws = sqlx::query_as::<_, WorkspaceDBRow>(
+                r#"
+INSERT INTO workspaces (name, ws_type, webhook_url)
+VALUES ($1, $2, $3)
+RETURNING id, name, ws_type, webhook_url
+            "#,
+            )
+            .bind(payload.name)
+            .bind(payload.ws_type)
+            .bind(payload.webhook_url)
+            .fetch_one(&self.pool)
+            .await?;
+
+            Ok(entity::Workspace {
+                id: ws.id,
+                name: ws.name,
+                ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str())?,
+                webhook_url: ws.webhook_url,
+            })
+        }
+
+        async fn find(&self, id: entity::WorkspaceId) -> Result<entity::Workspace> {
+            let ws = sqlx::query_as::<_, WorkspaceDBRow>(
+                r#"
+SELECT * FROM workspaces WHERE id = $1
+            "#,
+            )
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| match e {
+                sqlx::Error::RowNotFound => RepositoryError::NotFound(id),
+                _ => RepositoryError::Unexpected(e.to_string()),
+            })?;
+
+            Ok(entity::Workspace {
+                id: ws.id,
+                name: ws.name,
+                ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str())?,
+                webhook_url: ws.webhook_url,
+            })
+        }
+
+        async fn all(&self) -> Result<Vec<entity::Workspace>> {
+            let ws_vec = sqlx::query_as::<_, WorkspaceDBRow>(
+                r#"
+SELECT * FROM workspaces ORDER BY id DESC
+            "#,
+            )
+            .fetch_all(&self.pool)
+            .await?;
+
+            Ok(ws_vec
+                .into_iter()
+                .map(|ws| entity::Workspace {
+                    id: ws.id,
+                    name: ws.name,
+                    ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str()).unwrap(),
+                    webhook_url: ws.webhook_url,
+                })
+                .collect())
+        }
+
+        async fn update(&self, payload: entity::Workspace) -> Result<entity::Workspace> {
+            let ws_row = sqlx::query_as::<_, WorkspaceDBRow>(
+                r#"
+UPDATE workspaces
+SET name = $1, ws_type = $2, webhook_url = $3
+WHERE id = $4
+RETURNING *
+            "#,
+            )
+            .bind(payload.name)
+            .bind(payload.ws_type.to_string())
+            .bind(payload.webhook_url)
+            .bind(payload.id)
+            .fetch_one(&self.pool)
+            .await?;
+
+            Ok(entity::Workspace {
+                id: ws_row.id,
+                name: ws_row.name,
+                ws_type: entity::WorkspaceType::from_str(ws_row.ws_type.as_str())?,
+                webhook_url: ws_row.webhook_url,
+            })
+        }
+
+        async fn delete(&self, id: entity::WorkspaceId) -> Result<()> {
+            sqlx::query(
+                r#"
+DELETE FROM workspaces WHERE id = $1
+            "#,
+            )
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|err| match err {
+                sqlx::Error::RowNotFound => RepositoryError::NotFound(id),
+                _ => RepositoryError::Unexpected(err.to_string()),
+            })?;
+
+            Ok(())
+        }
+    }
 }
 
 // #[cfg(test)]
@@ -136,7 +273,7 @@ pub mod test_utils {
         }
 
         #[tokio::test]
-        async fn todo_crud_scenario() {
+        async fn workspace_crud_scenario() {
             // 初期データ
             let init_ws_vec = vec![
                 entity::Workspace::new(
@@ -171,18 +308,21 @@ pub mod test_utils {
                 ws_type: manipulate_target_data.ws_type.to_string(),
                 webhook_url: manipulate_target_data.webhook_url.clone(),
             };
-            let ws = repo.create(payload).await.expect("failed to create todo");
+            let ws = repo
+                .create(payload)
+                .await
+                .expect("failed to create workspace");
             assert_eq!(ws, manipulate_target_data);
 
             // find
             let ws = repo
                 .find(manipulate_target_data.id)
                 .await
-                .expect("failed to find todo");
+                .expect("failed to find workspace");
             assert_eq!(ws, manipulate_target_data);
 
             // all
-            let mut ws_vec = repo.all().await.expect("failed to get all todo");
+            let mut ws_vec = repo.all().await.expect("failed to get all workspace");
             let mut expected_ws_vec = init_ws_vec.clone();
             expected_ws_vec.push(manipulate_target_data.clone());
             assert_eq!(ws_vec.sort(), expected_ws_vec.sort());
@@ -197,7 +337,7 @@ pub mod test_utils {
             let ws = repo
                 .update(updated_ws.clone())
                 .await
-                .expect("failed to update todo");
+                .expect("failed to update workspace");
             assert_eq!(ws, updated_ws);
 
             /////////////////
@@ -206,8 +346,8 @@ pub mod test_utils {
 
             repo.delete(manipulate_target_data.id)
                 .await
-                .expect("failed to delete todo");
-            let mut ws_vec = repo.all().await.expect("failed to get all todo");
+                .expect("failed to delete workspace");
+            let mut ws_vec = repo.all().await.expect("failed to get all workspace");
             assert_eq!(ws_vec.sort(), init_ws_vec.clone().sort());
         }
     }

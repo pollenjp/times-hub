@@ -7,6 +7,7 @@ use axum::routing::{get, post};
 use axum::Extension;
 use axum::Router;
 use dotenv::dotenv;
+use sqlx::postgres::PgPool;
 use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -23,12 +24,24 @@ async fn main() {
 
     dotenv().ok();
 
+    let use_postgres: bool = true;
+    let app;
+    if use_postgres {
+        let database_url = &env::var("DATABASE_URL").expect("undefined [DATABASE_URL]");
+        tracing::debug!("start connecting to database: {}", database_url);
+        let pool = PgPool::connect(database_url)
+            .await
+            .expect(&format!("failed to connect to database: {}", database_url));
+
+        let repo = repository::pg::WorkspaceRepositoryForDB::new(pool);
+        app = create_app(repo);
+    } else {
+        let repo = repository::test_utils::WorkspaceRepositoryForMemory::new();
+        app = create_app(repo);
+    }
+
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("Listening on {}", addr);
-
-    let repo = repository::test_utils::WorkspaceRepositoryForMemory::new();
-
-    let app = create_app(repo);
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

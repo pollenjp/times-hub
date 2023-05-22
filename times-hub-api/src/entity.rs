@@ -1,4 +1,4 @@
-pub type WorkspaceId = u32;
+pub type WorkspaceId = i32;
 
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::EnumString)]
 pub enum WorkspaceType {
