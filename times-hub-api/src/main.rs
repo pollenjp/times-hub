@@ -7,10 +7,12 @@ use axum::routing::{get, post};
 use axum::Extension;
 use axum::Router;
 use dotenv::dotenv;
+use hyper::header::CONTENT_TYPE;
 use sqlx::postgres::PgPool;
 use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 
 fn init_logging() {
     let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
@@ -66,6 +68,13 @@ where
                 .delete(handler::delete_workspace::<T>),
         )
         .layer(Extension(Arc::new(repo)))
+        .layer(
+            CorsLayer::new()
+                .allow_methods(Any)
+                .allow_headers(vec![CONTENT_TYPE])
+                // TODO: Fix hard code
+                .allow_origin(AllowOrigin::exact("http://localhost:3001".parse().unwrap())),
+        )
 }
 
 async fn root() -> &'static str {

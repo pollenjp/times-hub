@@ -55,6 +55,14 @@ pub mod pg {
     #[async_trait]
     impl WorkspaceRepository for WorkspaceRepositoryForDB {
         async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace> {
+            // TODO: payload validation check
+            let ws = entity::Workspace {
+                id: 0,
+                name: payload.name.clone(),
+                ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str())?,
+                webhook_url: payload.webhook_url.clone(),
+            };
+
             let ws = sqlx::query_as::<_, WorkspaceDBRow>(
                 r#"
 INSERT INTO workspaces (name, ws_type, webhook_url)
@@ -62,9 +70,9 @@ VALUES ($1, $2, $3)
 RETURNING id, name, ws_type, webhook_url
             "#,
             )
-            .bind(payload.name)
-            .bind(payload.ws_type)
-            .bind(payload.webhook_url)
+            .bind(ws.name)
+            .bind(ws.ws_type.to_string())
+            .bind(ws.webhook_url)
             .fetch_one(&self.pool)
             .await?;
 
@@ -112,7 +120,10 @@ SELECT * FROM workspaces ORDER BY id DESC
                 .map(|ws| entity::Workspace {
                     id: ws.id,
                     name: ws.name,
-                    ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str()).unwrap(),
+                    ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str()).expect(
+                        format!("failed to unwrap WorkspaceType from DBRow: {}", ws.ws_type)
+                            .as_str(),
+                    ),
                     webhook_url: ws.webhook_url,
                 })
                 .collect())
