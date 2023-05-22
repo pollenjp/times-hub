@@ -8,15 +8,22 @@ type Props = {
 
   onUpdate: (ws: Workspace) => void
   onDelete: (id: number) => void
+  onChecked: (ws: Workspace) => void
 }
 
-const WorkspaceList: React.FC<Props> = ({ workspaces, onUpdate, onDelete }) => {
+const WorkspaceList: React.FC<Props> = ({ workspaces, onUpdate, onDelete, onChecked }) => {
   return (
     <Stack spacing={2}>
       <Typography variant="h2">Workspace List</Typography>
       <Stack spacing={2}>
         {workspaces.map((ws) => (
-          <WorkspaceItem key={ws.id} ws={ws} onUpdate={onUpdate} onDelete={onDelete} />
+          <WorkspaceItem
+            key={ws.id}
+            ws={ws}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            onChecked={onChecked}
+          />
         ))}
       </Stack>
     </Stack>

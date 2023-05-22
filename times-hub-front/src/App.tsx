@@ -5,12 +5,14 @@ import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { Workspace, NewWorkspacePayload } from "./types/workspace"
 import WorkspaceForm from "./components/WorkspaceForm"
 import WorkspaceList from "./components/WorkspaceList"
+import MessageForm from "./components/MessageForm"
 import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
 
 import "./App.css"
 
 const WorkspaceApp: React.FC = () => {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([])
+  const [checkedIDs, setCheckedIDs] = React.useState<Set<number>>(new Set())
 
   const onSubmit = async (payload: NewWorkspacePayload) => {
     // TODO: validation check
@@ -23,18 +25,44 @@ const WorkspaceApp: React.FC = () => {
     setWorkspaces(workspaces)
   }
 
-  const onUpdate = async (todo: Workspace) => {
-    // TODO: implement
+  const onUpdate = async (ws: Workspace) => {
+    //
+  }
+
+  const onChecked = async (ws: Workspace) => {
+    toggleChecked(ws.id)
+
+    setWorkspaces(
+      workspaces.map((workspace) => {
+        if (workspace.id === ws.id) {
+          return { ...workspace, checked: !workspace.checked }
+        }
+        return workspace
+      })
+    )
+  }
+
+  const toggleChecked = (id: number) => {
+    if (checkedIDs.has(id)) {
+      checkedIDs.delete(id)
+    } else {
+      checkedIDs.add(id)
+    }
   }
 
   const onDelete = async (id: number) => {
-    // TODO: implement
+    checkedIDs.delete(id)
   }
 
-  // 初期表示
+  const onMessageSubmit = async () => {
+    console.log("Hello")
+  }
+
+  // 初期状態
   React.useEffect(() => {
     ;(async () => {
       setWorkspaces(await getWorkspaceItems())
+      setCheckedIDs(new Set())
     })()
   }, [])
 
@@ -64,10 +92,32 @@ const WorkspaceApp: React.FC = () => {
           mt: 10,
         }}
       >
+        <Stack spacing={2}>
+          <Typography variant="h2">Message</Typography>
+          <Stack spacing={2}>
+            <Typography>{checkedIDs}</Typography>
+            <MessageForm checkedIDs={checkedIDs} onSubmit={onMessageSubmit}></MessageForm>
+          </Stack>
+        </Stack>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          p: 5,
+          mt: 10,
+        }}
+      >
         <Box maxWidth={700} width="100%">
           <Stack spacing={5}>
             {/* TODO: Write Message and send request */}
-            <WorkspaceList workspaces={workspaces} onUpdate={onUpdate} onDelete={onDelete} />
+            {/* checkboxMap */}
+            <WorkspaceList
+              workspaces={workspaces}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onChecked={onChecked}
+            />
             <WorkspaceForm onSubmit={onSubmit} />
           </Stack>
         </Box>

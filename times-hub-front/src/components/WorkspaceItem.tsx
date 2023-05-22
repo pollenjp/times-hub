@@ -3,31 +3,29 @@ import type { Workspace } from "../types/workspace"
 import { Typography, Button, Card, Grid, Stack, Checkbox } from "@mui/material"
 
 type Props = {
-  // メンバ変数
   ws: Workspace
-
-  // `todos` に対する更新を行う際に呼び出す関数
-  onUpdate: (todo: Workspace) => void
-
-  // `todos` の要素を削除する際に呼び出す関数
+  onUpdate: (ws: Workspace) => void
   onDelete: (id: number) => void
+  onChecked: (ws: Workspace) => void
 }
 
-const WorkspaceItem: React.FC<Props> = ({ ws: workspace, onUpdate, onDelete }) => {
-  // const handleCheckbox = () => onUpdate({ ...workspace, checked: !checked })
+const WorkspaceItem: React.FC<Props> = ({ ws, onUpdate, onDelete, onChecked }) => {
+  const handleCheckbox = () => {
+    onChecked(ws)
+  }
 
-  const handleDelete = () => onDelete(workspace.id)
+  const handleDelete = () => onDelete(ws.id)
 
   return (
     <Card sx={{ p: 2 }}>
       <Grid container spacing={2} alignItems="center">
-        {/* <Grid item xs={1}>
-          <Checkbox onChange={handleCheckbox} checked={checked}></Checkbox>
-        </Grid> */}
+        <Grid item xs={1}>
+          <Checkbox onChange={handleCheckbox} checked={ws.checked}></Checkbox>
+        </Grid>
         <Grid item xs={8}>
           <Stack spacing={1}>
             <Typography variant="caption" fontSize={16}>
-              {workspace.name}
+              {ws.name}
             </Typography>
           </Stack>
         </Grid>

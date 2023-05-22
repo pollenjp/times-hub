@@ -1,4 +1,4 @@
-import type { NewWorkspacePayload, Workspace } from "../../types/workspace"
+import type { NewWorkspacePayload, Workspace, WorkspaceApiResponse } from "../../types/workspace"
 
 // TODO: fix hard code url
 const db_url_base = "http://localhost:3000"
@@ -14,8 +14,15 @@ export const addWorkspaceItem = async (payload: NewWorkspacePayload) => {
   if (!res.ok) {
     throw new Error("Add request failed")
   }
-  const json: Workspace = await res.json()
-  return json
+  const json: WorkspaceApiResponse = await res.json()
+  const ws: Workspace = {
+    id: json.id,
+    name: json.name,
+    ws_type: json.ws_type,
+    webhook_url: "",
+    checked: false,
+  }
+  return ws
 }
 
 export const getWorkspaceItems = async () => {
@@ -28,12 +35,27 @@ export const getWorkspaceItems = async () => {
   if (!res.ok) {
     throw new Error("get request failed")
   }
-  const json: Workspace[] = await res.json()
-  return json
+  const json: WorkspaceApiResponse[] = await res.json()
+  const ws_array: Workspace[] = json.map((ws) => {
+    return {
+      id: ws.id,
+      name: ws.name,
+      ws_type: ws.ws_type,
+      webhook_url: "",
+      checked: false,
+    }
+  })
+
+  return ws_array
 }
 
-export const updateWorkspaceItem = async (todo: Workspace) => {
-  const { id, ...payload } = todo
+export const updateWorkspaceItem = async (ws: Workspace) => {
+  const id = ws.id
+  const payload: NewWorkspacePayload = {
+    name: ws.name,
+    ws_type: ws.ws_type,
+    webhook_url: ws.webhook_url,
+  }
   const res = await fetch(`${db_url_base}/workspaces/${id}`, {
     method: "PATCH",
     headers: {
@@ -44,6 +66,13 @@ export const updateWorkspaceItem = async (todo: Workspace) => {
   if (!res.ok) {
     throw new Error("update todo request failed")
   }
-  const json: Workspace = await res.json()
-  return json
+  const json: WorkspaceApiResponse = await res.json()
+  const ws_res: Workspace = {
+    id: json.id,
+    name: json.name,
+    ws_type: json.ws_type,
+    webhook_url: "",
+    checked: false,
+  }
+  return ws_res
 }
