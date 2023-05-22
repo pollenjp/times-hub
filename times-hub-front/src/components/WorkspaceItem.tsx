@@ -4,7 +4,7 @@ import { Typography, Button, Card, Grid, Stack, Checkbox } from "@mui/material"
 
 type Props = {
   // メンバ変数
-  todo: Workspace
+  ws: Workspace
 
   // `todos` に対する更新を行う際に呼び出す関数
   onUpdate: (todo: Workspace) => void
@@ -13,7 +13,7 @@ type Props = {
   onDelete: (id: number) => void
 }
 
-const WorkspaceItem: React.FC<Props> = ({ todo: workspace, onUpdate, onDelete }) => {
+const WorkspaceItem: React.FC<Props> = ({ ws: workspace, onUpdate, onDelete }) => {
   // const handleCheckbox = () => onUpdate({ ...workspace, checked: !checked })
 
   const handleDelete = () => onDelete(workspace.id)

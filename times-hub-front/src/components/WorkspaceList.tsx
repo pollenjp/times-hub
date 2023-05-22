@@ -10,13 +10,13 @@ type Props = {
   onDelete: (id: number) => void
 }
 
-const WorkspaceList: React.FC<Props> = ({ workspaces: todos, onUpdate, onDelete }) => {
+const WorkspaceList: React.FC<Props> = ({ workspaces, onUpdate, onDelete }) => {
   return (
     <Stack spacing={2}>
       <Typography variant="h2">Workspace List</Typography>
       <Stack spacing={2}>
-        {todos.map((ws) => (
-          <WorkspaceItem key={ws.id} todo={ws} onUpdate={onUpdate} onDelete={onDelete} />
+        {workspaces.map((ws) => (
+          <WorkspaceItem key={ws.id} ws={ws} onUpdate={onUpdate} onDelete={onDelete} />
         ))}
       </Stack>
     </Stack>
