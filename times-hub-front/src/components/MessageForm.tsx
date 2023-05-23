@@ -20,7 +20,7 @@ const MessageItem: React.FC<Props> = ({ checkedIDs, onSubmit }) => {
         <Grid container rowSpacing={2} columnSpacing={5}>
           <Grid item xs={12}>
             <TextField
-              label="webhook url"
+              label="text"
               variant="filled"
               // value={editWebhookUrl}
               // onChange={(e) => setEditWebhookUrl(e.target.value)}
