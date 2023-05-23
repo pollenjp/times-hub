@@ -1,14 +1,24 @@
 import React from "react"
 import type { Workspace } from "../types/workspace"
 import { Button, Grid, TextField, Paper, Box } from "@mui/material"
+import { MessagePayload } from "../types/message"
 
 type Props = {
   checkedIDs: Set<number>
-  onSubmit: () => void
+  onSubmit: (msg: MessagePayload) => void
 }
 
 const MessageItem: React.FC<Props> = ({ checkedIDs, onSubmit }) => {
-  // const handleCheckbox = () => onUpdate({ ...workspace, checked: !checked })
+  const [editText, setEditText] = React.useState("")
+
+  const submitHandler = () => {
+    const msg: MessagePayload = {
+      targets: Array.from(checkedIDs.values()),
+      text: editText,
+    }
+    onSubmit(msg)
+    setEditText("")
+  }
 
   return (
     <Paper elevation={2}>
@@ -22,17 +32,14 @@ const MessageItem: React.FC<Props> = ({ checkedIDs, onSubmit }) => {
             <TextField
               label="text"
               variant="filled"
-              // value={editWebhookUrl}
-              // onChange={(e) => setEditWebhookUrl(e.target.value)}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
               fullWidth
             ></TextField>
           </Grid>
           <Grid item xs={9}></Grid>
           <Grid item xs={3}>
-            <Button
-              // onClick={addWorkspaceHandler}
-              fullWidth
-            >
+            <Button onClick={submitHandler} fullWidth>
               send
             </Button>
           </Grid>

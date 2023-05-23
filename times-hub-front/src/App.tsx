@@ -6,7 +6,9 @@ import { Workspace, NewWorkspacePayload } from "./types/workspace"
 import WorkspaceForm from "./components/WorkspaceForm"
 import WorkspaceList from "./components/WorkspaceList"
 import MessageForm from "./components/MessageForm"
-import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
+import { addWorkspaceItem, getWorkspaceItems } from "./lib/api/workspace"
+import { MessagePayload } from "./types/message"
+import { sendMessage } from "./lib/api/message"
 
 import "./App.css"
 
@@ -17,10 +19,8 @@ const WorkspaceApp: React.FC = () => {
   const onSubmit = async (payload: NewWorkspacePayload) => {
     // TODO: validation check
 
-    // todo の作成をサーバーに投げる
     await addWorkspaceItem(payload)
 
-    // todo の作成に成功したら、サーバーから todo の一覧を取得する
     const workspaces = await getWorkspaceItems()
     setWorkspaces(workspaces)
   }
@@ -54,8 +54,8 @@ const WorkspaceApp: React.FC = () => {
     checkedIDs.delete(id)
   }
 
-  const onMessageSubmit = async () => {
-    console.log("Hello")
+  const onMessageSubmit = async (msg: MessagePayload) => {
+    sendMessage(msg)
   }
 
   // 初期状態
@@ -95,7 +95,7 @@ const WorkspaceApp: React.FC = () => {
         <Stack spacing={2}>
           <Typography variant="h2">Message</Typography>
           <Stack spacing={2}>
-            <Typography>{checkedIDs}</Typography>
+            {/* <Typography>{checkedIDs}</Typography> */}
             <MessageForm checkedIDs={checkedIDs} onSubmit={onMessageSubmit}></MessageForm>
           </Stack>
         </Stack>
@@ -110,8 +110,6 @@ const WorkspaceApp: React.FC = () => {
       >
         <Box maxWidth={700} width="100%">
           <Stack spacing={5}>
-            {/* TODO: Write Message and send request */}
-            {/* checkboxMap */}
             <WorkspaceList
               workspaces={workspaces}
               onUpdate={onUpdate}

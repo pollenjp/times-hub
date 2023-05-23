@@ -67,6 +67,7 @@ where
                 .patch(handler::update_workspace::<T>)
                 .delete(handler::delete_workspace::<T>),
         )
+        .route("/message", post(handler::message::send_message::<T>))
         .layer(Extension(Arc::new(repo)))
         .layer(
             CorsLayer::new()
