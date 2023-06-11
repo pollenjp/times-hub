@@ -7,7 +7,7 @@ import WorkspaceList from "./components/WorkspaceList"
 import { sendMessage } from "./lib/api/message"
 import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
 import { MessagePayload } from "./types/message"
-import { Workspace, NewWorkspacePayload } from "./types/workspace"
+import { Workspace, WorkspacePayload } from "./types/workspace"
 
 import "./App.css"
 
@@ -16,7 +16,7 @@ const WorkspaceApp: React.FC = () => {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([])
   const [checkedIDs, setCheckedIDs] = React.useState<Set<number>>(new Set())
 
-  const onSubmit = async (payload: NewWorkspacePayload) => {
+  const onSubmit = async (payload: WorkspacePayload) => {
     // TODO: validation check
 
     await addWorkspaceItem(payload)
@@ -26,8 +26,8 @@ const WorkspaceApp: React.FC = () => {
   }
 
   const onUpdate = async (ws: Workspace) => {
-    throw new Error("Not implemented")
-    updateWorkspaceItem(ws)
+    await updateWorkspaceItem(ws)
+    setWorkspaces(await getWorkspaceItems())
   }
 
   const onChecked = async (ws: Workspace) => {

@@ -13,7 +13,7 @@ export type WorkspaceApiResponse = {
   ws_type: string
 }
 
-export type NewWorkspacePayload = {
+export type WorkspacePayload = {
   name: string
   ws_type: string
   webhook_url: string

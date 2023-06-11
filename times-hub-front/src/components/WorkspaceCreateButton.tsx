@@ -1,11 +1,11 @@
 import { Button } from "@mui/material"
 import React from "react"
 import WorkspaceCreateFormDialog from "./WorkspaceCreateFormDialog"
-import { NewWorkspacePayload } from "../types/workspace"
+import { WorkspacePayload } from "../types/workspace"
 
 
 type Props = {
-  onSubmit: (newTodo: NewWorkspacePayload) => void
+  onSubmit: (newTodo: WorkspacePayload) => void
 }
 
 const WorkspaceCreateButton: React.FC<Props> = ({ onSubmit }) => {

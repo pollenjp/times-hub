@@ -15,10 +15,10 @@ import InputLabel from "@mui/material/InputLabel"
 import MenuItem from "@mui/material/MenuItem"
 import Select from "@mui/material/Select"
 import React from "react"
-import { NewWorkspacePayload } from "../types/workspace"
+import { WorkspacePayload } from "../types/workspace"
 
 
-type OnSubmitCreate = (newTodo: NewWorkspacePayload) => void
+type OnSubmitCreate = (newTodo: WorkspacePayload) => void
 
 type Props = {
   dialogOpenState: boolean

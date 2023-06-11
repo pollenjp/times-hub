@@ -1,9 +1,9 @@
-import type { NewWorkspacePayload, Workspace, WorkspaceApiResponse } from "../../types/workspace"
+import type { WorkspacePayload, Workspace, WorkspaceApiResponse } from "../../types/workspace"
 
 // TODO: fix hard code url
 const db_url_base = "http://localhost:3000"
 
-export const addWorkspaceItem = async (payload: NewWorkspacePayload) => {
+export const addWorkspaceItem = async (payload: WorkspacePayload) => {
   const res = await fetch(`${db_url_base}/workspaces`, {
     method: "POST",
     headers: {
@@ -51,7 +51,7 @@ export const getWorkspaceItems = async () => {
 
 export const updateWorkspaceItem = async (ws: Workspace) => {
   const id = ws.id
-  const payload: NewWorkspacePayload = {
+  const payload: WorkspacePayload = {
     name: ws.name,
     ws_type: ws.ws_type,
     webhook_url: ws.webhook_url
