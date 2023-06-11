@@ -1,6 +1,7 @@
+import { Typography, Button, Card, Grid, Stack, Checkbox } from "@mui/material"
 import React from "react"
 import type { Workspace } from "../types/workspace"
-import { Typography, Button, Card, Grid, Stack, Checkbox } from "@mui/material"
+
 
 type Props = {
   ws: Workspace
@@ -13,6 +14,8 @@ const WorkspaceItem: React.FC<Props> = ({ ws, onUpdate, onDelete, onChecked }) =
   const handleCheckbox = () => {
     onChecked(ws)
   }
+
+  const handleUpdate = () => onDelete(ws.id)
 
   const handleDelete = () => onDelete(ws.id)
 

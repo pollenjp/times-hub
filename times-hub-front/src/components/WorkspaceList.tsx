@@ -1,7 +1,8 @@
-import React from "react"
-import type { Workspace } from "../types/workspace"
 import { Stack, Typography } from "@mui/material"
+import React from "react"
 import WorkspaceItem from "./WorkspaceItem"
+import type { Workspace } from "../types/workspace"
+
 
 type Props = {
   workspaces: Workspace[]

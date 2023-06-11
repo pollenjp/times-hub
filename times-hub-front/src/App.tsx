@@ -1,16 +1,17 @@
-import React from "react"
 import { Box, Stack, Typography } from "@mui/material"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
+import React from "react"
 
-import { Workspace, NewWorkspacePayload } from "./types/workspace"
+import MessageForm from "./components/MessageForm"
 import WorkspaceForm from "./components/WorkspaceForm"
 import WorkspaceList from "./components/WorkspaceList"
-import MessageForm from "./components/MessageForm"
-import { addWorkspaceItem, getWorkspaceItems } from "./lib/api/workspace"
-import { MessagePayload } from "./types/message"
 import { sendMessage } from "./lib/api/message"
+import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
+import { MessagePayload } from "./types/message"
+import { Workspace, NewWorkspacePayload } from "./types/workspace"
 
 import "./App.css"
+
 
 const WorkspaceApp: React.FC = () => {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([])
@@ -26,7 +27,8 @@ const WorkspaceApp: React.FC = () => {
   }
 
   const onUpdate = async (ws: Workspace) => {
-    //
+    throw new Error("Not implemented")
+    updateWorkspaceItem(ws)
   }
 
   const onChecked = async (ws: Workspace) => {
@@ -52,6 +54,8 @@ const WorkspaceApp: React.FC = () => {
 
   const onDelete = async (id: number) => {
     checkedIDs.delete(id)
+    // TODO: API request: delete workspace
+    throw new Error("Not implemented")
   }
 
   const onMessageSubmit = async (msg: MessagePayload) => {
@@ -79,7 +83,7 @@ const WorkspaceApp: React.FC = () => {
           p: 2,
           width: "100%",
           height: 80,
-          zIndex: 3,
+          zIndex: 3
         }}
       >
         <Typography variant="h1">times-hub App</Typography>
@@ -89,7 +93,7 @@ const WorkspaceApp: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           p: 5,
-          mt: 10,
+          mt: 10
         }}
       >
         <Stack spacing={2}>
@@ -105,7 +109,7 @@ const WorkspaceApp: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           p: 5,
-          mt: 10,
+          mt: 10
         }}
       >
         <Box maxWidth={700} width="100%">
@@ -127,12 +131,12 @@ const WorkspaceApp: React.FC = () => {
 const theme = createTheme({
   typography: {
     h1: {
-      fontsize: 30,
+      fontsize: 30
     },
     h2: {
-      fontsize: 20,
-    },
-  },
+      fontsize: 20
+    }
+  }
 })
 
 const App: React.FC = () => {

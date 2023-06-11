@@ -1,6 +1,18 @@
+import {
+  Box,
+  Button,
+  TextField,
+  Paper,
+  Grid,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from "@mui/material"
 import React from "react"
 import { NewWorkspacePayload } from "../types/workspace"
-import { Box, Button, TextField, Paper, Grid } from "@mui/material"
+
 
 type Props = {
   onSubmit: (newTodo: NewWorkspacePayload) => void
@@ -19,7 +31,7 @@ const WorkspaceForm: React.FC<Props> = ({ onSubmit }) => {
     onSubmit({
       name: editName,
       ws_type: editWsType,
-      webhook_url: editWebhookUrl,
+      webhook_url: editWebhookUrl
     })
     setEditName("")
     setEditWsType("")
@@ -30,7 +42,7 @@ const WorkspaceForm: React.FC<Props> = ({ onSubmit }) => {
     <Paper elevation={2}>
       <Box
         sx={{
-          p: 2,
+          p: 2
         }}
       >
         <Grid container rowSpacing={2} columnSpacing={5}>
