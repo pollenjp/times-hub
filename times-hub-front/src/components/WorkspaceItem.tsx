@@ -1,5 +1,8 @@
-import { Typography, Button, Card, Grid, Stack, Checkbox } from "@mui/material"
+import DeleteIcon from "@mui/icons-material/Delete"
+import { Typography, Card, Grid, Stack, Checkbox } from "@mui/material"
+import IconButton from "@mui/material/IconButton"
 import React from "react"
+import WorkspaceEditButton from "./WorkspaceEditButton"
 import type { Workspace } from "../types/workspace"
 
 
@@ -15,8 +18,6 @@ const WorkspaceItem: React.FC<Props> = ({ ws, onUpdate, onDelete, onChecked }) =
     onChecked(ws)
   }
 
-  const handleUpdate = () => onDelete(ws.id)
-
   const handleDelete = () => onDelete(ws.id)
 
   return (
@@ -25,18 +26,23 @@ const WorkspaceItem: React.FC<Props> = ({ ws, onUpdate, onDelete, onChecked }) =
         <Grid item xs={1}>
           <Checkbox onChange={handleCheckbox} checked={ws.checked}></Checkbox>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={9}>
           <Stack spacing={1}>
             <Typography variant="caption" fontSize={16}>
               {ws.name}
             </Typography>
           </Stack>
         </Grid>
-        <Grid item xs={2}>
+        <Grid item xs={1}>
           <Stack direction="row" spacing={1}>
-            <Button onClick={handleDelete} color="error">
-              delete
-            </Button>
+            <WorkspaceEditButton onSubmit={onUpdate} workspace={ws} />
+          </Stack>
+        </Grid>
+        <Grid item xs={1}>
+          <Stack direction="row" spacing={1}>
+            <IconButton color="error" aria-label="delete" onClick={handleDelete}>
+              <DeleteIcon />
+            </IconButton>
           </Stack>
         </Grid>
       </Grid>

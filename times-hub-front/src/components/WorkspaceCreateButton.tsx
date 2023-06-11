@@ -1,6 +1,6 @@
 import { Button } from "@mui/material"
 import React from "react"
-import WorkspaceFormDialog from "./WorkspaceFormDialog"
+import WorkspaceCreateFormDialog from "./WorkspaceCreateFormDialog"
 import { NewWorkspacePayload } from "../types/workspace"
 
 
@@ -24,13 +24,11 @@ const WorkspaceCreateButton: React.FC<Props> = ({ onSubmit }) => {
       <Button variant="outlined" onClick={handleClickOpen}>
         Create a new workspace
       </Button>
-      <WorkspaceFormDialog
-        {...{
-          onSubmit: onSubmit,
-          dialogOpenState: open,
-          dialogHandleClose: handleClose
-        }}
-      ></WorkspaceFormDialog>
+      <WorkspaceCreateFormDialog
+        onSubmit={onSubmit}
+        dialogOpenState={open}
+        dialogHandleClose={handleClose}
+      ></WorkspaceCreateFormDialog>
     </>
   )
 }

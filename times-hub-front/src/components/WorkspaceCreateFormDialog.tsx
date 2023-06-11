@@ -13,26 +13,28 @@ import FormControl from "@mui/material/FormControl"
 import FormHelperText from "@mui/material/FormHelperText"
 import InputLabel from "@mui/material/InputLabel"
 import MenuItem from "@mui/material/MenuItem"
-import Select, { SelectChangeEvent } from "@mui/material/Select"
+import Select from "@mui/material/Select"
 import React from "react"
 import { NewWorkspacePayload } from "../types/workspace"
 
 
+type OnSubmitCreate = (newTodo: NewWorkspacePayload) => void
+
 type Props = {
   dialogOpenState: boolean
   dialogHandleClose: () => void
-  onSubmit: (newTodo: NewWorkspacePayload) => void
+  onSubmit: OnSubmitCreate
 }
 
-const WorkspaceFormDialog: React.FC<Props> = ({ dialogOpenState, dialogHandleClose, onSubmit }) => {
+const WorkspaceCreateFormDialog: React.FC<Props> = ({
+  dialogOpenState,
+  dialogHandleClose,
+  onSubmit
+}) => {
   const [editName, setEditName] = React.useState("")
   const defaultWsType = "slack"
   const [editWsType, setEditWsType] = React.useState(defaultWsType)
   const [editWebhookUrl, setEditWebhookUrl] = React.useState("")
-
-  const handleWorkspaceTypeMenuChange = (event: SelectChangeEvent) => {
-    setEditWsType(event.target.value as string)
-  }
 
   const addWorkspaceHandler = async () => {
     if (!editName) {
@@ -76,7 +78,7 @@ const WorkspaceFormDialog: React.FC<Props> = ({ dialogOpenState, dialogHandleClo
                   id="workspace-type-menu"
                   value={editWsType}
                   label="Workspace Type"
-                  onChange={handleWorkspaceTypeMenuChange}
+                  onChange={(e) => setEditWsType(e.target.value as string)}
                 >
                   <MenuItem value={"slack"}>Slack</MenuItem>
                   {/* <MenuItem value={"discord"}>Discord</MenuItem> */}
@@ -110,4 +112,4 @@ const WorkspaceFormDialog: React.FC<Props> = ({ dialogOpenState, dialogHandleClo
   )
 }
 
-export default WorkspaceFormDialog
+export default WorkspaceCreateFormDialog
