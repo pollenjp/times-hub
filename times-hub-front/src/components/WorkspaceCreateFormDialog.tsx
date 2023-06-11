@@ -15,7 +15,7 @@ import InputLabel from "@mui/material/InputLabel"
 import MenuItem from "@mui/material/MenuItem"
 import Select from "@mui/material/Select"
 import React from "react"
-import { WorkspacePayload } from "../types/workspace"
+import { WorkspacePayload, Workspace } from "../types/workspace"
 
 
 type OnSubmitCreate = (newTodo: WorkspacePayload) => void
@@ -31,25 +31,23 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
   dialogHandleClose,
   onSubmit
 }) => {
-  const [editName, setEditName] = React.useState("")
-  const defaultWsType = "slack"
-  const [editWsType, setEditWsType] = React.useState(defaultWsType)
-  const [editWebhookUrl, setEditWebhookUrl] = React.useState("")
+  const defaultWorkspace = {
+    name: "",
+    ws_type: "slack",
+    webhook_url: ""
+  } as WorkspacePayload
+  const [editWorkspace, setEditWorkspace] = React.useState(defaultWorkspace)
 
   const addWorkspaceHandler = async () => {
-    if (!editName) {
-      return
-    }
+    // TODO: validation
 
-    onSubmit({
-      name: editName,
-      ws_type: editWsType,
-      webhook_url: editWebhookUrl
-    })
-    setEditName("")
-    setEditWsType(defaultWsType)
-    setEditWebhookUrl("")
+    onSubmit(editWorkspace)
+    setEditWorkspace(defaultWorkspace)
   }
+
+  React.useEffect(() => {
+    setEditWorkspace(defaultWorkspace)
+  }, [dialogOpenState])
 
   return (
     <Dialog open={dialogOpenState} onClose={dialogHandleClose}>
@@ -67,8 +65,14 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
                 required
                 label="Workspace Name"
                 variant="filled"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                // value={editName}
+                value={editWorkspace.name}
+                onChange={(e) =>
+                  setEditWorkspace({
+                    ...editWorkspace,
+                    name: e.target.value
+                  })
+                }
                 fullWidth
               ></TextField>
               <FormControl required variant="filled" fullWidth>
@@ -76,9 +80,14 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
                 <Select
                   labelId="workspace-type-menu-label"
                   id="workspace-type-menu"
-                  value={editWsType}
                   label="Workspace Type"
-                  onChange={(e) => setEditWsType(e.target.value as string)}
+                  value={editWorkspace.ws_type}
+                  onChange={(e) =>
+                    setEditWorkspace({
+                      ...editWorkspace,
+                      ws_type: e.target.value
+                    })
+                  }
                 >
                   <MenuItem value={"slack"}>Slack</MenuItem>
                   {/* <MenuItem value={"discord"}>Discord</MenuItem> */}
@@ -89,8 +98,13 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
                 required
                 label="Webhook URL"
                 variant="filled"
-                value={editWebhookUrl}
-                onChange={(e) => setEditWebhookUrl(e.target.value)}
+                value={editWorkspace.webhook_url}
+                onChange={(e) =>
+                  setEditWorkspace({
+                    ...editWorkspace,
+                    webhook_url: e.target.value
+                  })
+                }
                 fullWidth
               ></TextField>
             </Grid>

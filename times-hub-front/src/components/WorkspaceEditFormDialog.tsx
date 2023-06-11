@@ -31,32 +31,23 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
   onSubmit,
   workspace: ws
 }) => {
-  const [editName, setEditName] = React.useState("")
-  const defaultWsType = "slack"
-  const [editWsType, setEditWsType] = React.useState(defaultWsType)
-  const [editWebhookUrl, setEditWebhookUrl] = React.useState("")
-
-  const setWorkspaceState = (w: Workspace) => {
-    setEditName(w.name)
-    setEditWsType(w.ws_type)
-    setEditWebhookUrl(w.webhook_url)
-  }
+  const defaultWorkspace = {
+    id: ws.id,
+    name: ws.name,
+    ws_type: ws.ws_type,
+    webhook_url: ws.webhook_url
+  } as Workspace
+  const [editWorkspace, setEditWorkspace] = React.useState(defaultWorkspace)
 
   const editWorkspaceHandler = async () => {
     // TODO: validation
 
-    const newWorkspace: Workspace = {
-      ...ws,
-      name: editName,
-      ws_type: editWsType,
-      webhook_url: editWebhookUrl
-    }
-    onSubmit(newWorkspace)
-    setWorkspaceState(newWorkspace)
+    onSubmit(editWorkspace)
+    setEditWorkspace(defaultWorkspace)
   }
 
   React.useEffect(() => {
-    setWorkspaceState(ws)
+    setEditWorkspace(ws)
   }, [ws])
 
   return (
@@ -75,8 +66,13 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
                 required
                 label="Workspace Name"
                 variant="filled"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                value={editWorkspace.name}
+                onChange={(e) =>
+                  setEditWorkspace({
+                    ...editWorkspace,
+                    name: e.target.value
+                  })
+                }
                 fullWidth
               ></TextField>
               <FormControl required variant="filled" fullWidth>
@@ -84,9 +80,14 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
                 <Select
                   labelId="workspace-type-menu-label"
                   id="workspace-type-menu"
-                  value={editWsType}
                   label="Workspace Type"
-                  onChange={(e) => setEditWsType(e.target.value as string)}
+                  value={editWorkspace.ws_type}
+                  onChange={(e) =>
+                    setEditWorkspace({
+                      ...editWorkspace,
+                      ws_type: e.target.value
+                    })
+                  }
                 >
                   <MenuItem value={"slack"}>Slack</MenuItem>
                   {/* <MenuItem value={"discord"}>Discord</MenuItem> */}
@@ -97,8 +98,13 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
                 required
                 label="Webhook URL"
                 variant="filled"
-                value={editWebhookUrl}
-                onChange={(e) => setEditWebhookUrl(e.target.value)}
+                value={editWorkspace.webhook_url}
+                onChange={(e) =>
+                  setEditWorkspace({
+                    ...editWorkspace,
+                    webhook_url: e.target.value
+                  })
+                }
                 fullWidth
               ></TextField>
             </Grid>
