@@ -1,15 +1,13 @@
 import { Box, Stack, Typography } from "@mui/material"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import React from "react"
-
 import MessageForm from "./components/MessageForm"
-import WorkspaceForm from "./components/WorkspaceForm"
+import WorkspaceCreateButton from "./components/WorkspaceCreateButton"
 import WorkspaceList from "./components/WorkspaceList"
 import { sendMessage } from "./lib/api/message"
 import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
 import { MessagePayload } from "./types/message"
 import { Workspace, NewWorkspacePayload } from "./types/workspace"
-
 import "./App.css"
 
 
@@ -114,13 +112,14 @@ const WorkspaceApp: React.FC = () => {
       >
         <Box maxWidth={700} width="100%">
           <Stack spacing={5}>
+            <Typography variant="h2">Workspace List</Typography>
+            <WorkspaceCreateButton onSubmit={onSubmit} />
             <WorkspaceList
               workspaces={workspaces}
               onUpdate={onUpdate}
               onDelete={onDelete}
               onChecked={onChecked}
             />
-            <WorkspaceForm onSubmit={onSubmit} />
           </Stack>
         </Box>
       </Box>
