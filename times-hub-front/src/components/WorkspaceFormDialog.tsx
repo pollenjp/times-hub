@@ -19,14 +19,15 @@ import { NewWorkspacePayload } from "../types/workspace"
 
 
 type Props = {
-  onSubmit: (newTodo: NewWorkspacePayload) => void
   dialogOpenState: boolean
   dialogHandleClose: () => void
+  onSubmit: (newTodo: NewWorkspacePayload) => void
 }
 
-const WorkspaceFormDialog: React.FC<Props> = ({ onSubmit, dialogOpenState, dialogHandleClose }) => {
+const WorkspaceFormDialog: React.FC<Props> = ({ dialogOpenState, dialogHandleClose, onSubmit }) => {
   const [editName, setEditName] = React.useState("")
-  const [editWsType, setEditWsType] = React.useState("slack")
+  const defaultWsType = "slack"
+  const [editWsType, setEditWsType] = React.useState(defaultWsType)
   const [editWebhookUrl, setEditWebhookUrl] = React.useState("")
 
   const handleWorkspaceTypeMenuChange = (event: SelectChangeEvent) => {
@@ -44,7 +45,7 @@ const WorkspaceFormDialog: React.FC<Props> = ({ onSubmit, dialogOpenState, dialo
       webhook_url: editWebhookUrl
     })
     setEditName("")
-    setEditWsType("")
+    setEditWsType(defaultWsType)
     setEditWebhookUrl("")
   }
 
