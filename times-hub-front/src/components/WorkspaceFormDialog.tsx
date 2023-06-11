@@ -9,6 +9,11 @@ import {
   DialogContentText,
   DialogTitle
 } from "@mui/material"
+import FormControl from "@mui/material/FormControl"
+import FormHelperText from "@mui/material/FormHelperText"
+import InputLabel from "@mui/material/InputLabel"
+import MenuItem from "@mui/material/MenuItem"
+import Select, { SelectChangeEvent } from "@mui/material/Select"
 import React from "react"
 import { NewWorkspacePayload } from "../types/workspace"
 
@@ -21,8 +26,12 @@ type Props = {
 
 const WorkspaceFormDialog: React.FC<Props> = ({ onSubmit, dialogOpenState, dialogHandleClose }) => {
   const [editName, setEditName] = React.useState("")
-  const [editWsType, setEditWsType] = React.useState("")
+  const [editWsType, setEditWsType] = React.useState("slack")
   const [editWebhookUrl, setEditWebhookUrl] = React.useState("")
+
+  const handleWorkspaceTypeMenuChange = (event: SelectChangeEvent) => {
+    setEditWsType(event.target.value as string)
+  }
 
   const addWorkspaceHandler = async () => {
     if (!editName) {
@@ -53,24 +62,29 @@ const WorkspaceFormDialog: React.FC<Props> = ({ onSubmit, dialogOpenState, dialo
             <Grid item xs={12}>
               <TextField
                 required
-                label="workspace name"
+                label="Workspace Name"
                 variant="filled"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 fullWidth
               ></TextField>
+              <FormControl required variant="filled" fullWidth>
+                <InputLabel id="workspace-type-menu-label">Workspace Type</InputLabel>
+                <Select
+                  labelId="workspace-type-menu-label"
+                  id="workspace-type-menu"
+                  value={editWsType}
+                  label="Workspace Type"
+                  onChange={handleWorkspaceTypeMenuChange}
+                >
+                  <MenuItem value={"slack"}>Slack</MenuItem>
+                  {/* <MenuItem value={"discord"}>Discord</MenuItem> */}
+                </Select>
+                <FormHelperText>Note: Only support slack now.</FormHelperText>
+              </FormControl>
               <TextField
-                // TODO: テキストではなく、検索可能なプルダウンにしたい
                 required
-                label="workspace type (only support 'slack' now)"
-                variant="filled"
-                value={editWsType}
-                onChange={(e) => setEditWsType(e.target.value)}
-                fullWidth
-              ></TextField>
-              <TextField
-                required
-                label="webhook url"
+                label="Webhook URL"
                 variant="filled"
                 value={editWebhookUrl}
                 onChange={(e) => setEditWebhookUrl(e.target.value)}
