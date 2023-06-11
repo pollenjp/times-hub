@@ -11,6 +11,5 @@ format:
 
 .PHONY: lint
 lint:
-	npx prettier-eslint-cli 'src/**/*.{ts,tsx}'
-#	npx eslint 'src/**/*.{ts,tsx}'
+	npx eslint 'src/**/*.{ts,tsx}'
 #	npx prettier -c 'src/**/*.{ts,tsx}'
