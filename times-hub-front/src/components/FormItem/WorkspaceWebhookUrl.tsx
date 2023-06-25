@@ -24,6 +24,12 @@ const workspaceFormItemWebhookUrlFunc: React.FC<Props> = ({ value, onChange: onC
       return false
     }
 
+    if (!validateUrl(value)) {
+      setIsError(true)
+      setErrorMessage("URLが適切ではありません。")
+      return false
+    }
+
     setIsError(false)
     return true
   }
@@ -50,3 +56,17 @@ const workspaceFormItemWebhookUrlFunc: React.FC<Props> = ({ value, onChange: onC
 const WorkspaceFormItemWebhookUrl = React.memo(workspaceFormItemWebhookUrlFunc)
 
 export default WorkspaceFormItemWebhookUrl
+
+const validateUrl = (url: string): boolean => {
+  const urlRegExp = new RegExp(
+    "^(https?:\\/\\/)?" + // protocol
+      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name and extension
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+      "(\\:\\d+)?" + // port
+      "(\\/[-a-z\\d%_.~+]*)*" + // path
+      "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+      "(\\#[-a-z\\d_]*)?$",
+    "i" // fragment locator
+  )
+  return !!urlRegExp.test(url)
+}
