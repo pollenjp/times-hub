@@ -3,8 +3,7 @@ export type Workspace = {
   id: number
   name: string
   ws_type: string
-  webhook_url: string = ""
-  checked: boolean = false
+  checked: boolean
 }
 
 export type WorkspaceApiResponse = {
@@ -14,6 +13,13 @@ export type WorkspaceApiResponse = {
 }
 
 export type WorkspacePayload = {
+  name: string
+  ws_type: string
+  webhook_url: string
+}
+
+export type UpdateWorkspacePayload = {
+  id: number
   name: string
   ws_type: string
   webhook_url: string

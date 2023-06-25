@@ -3,17 +3,18 @@ import React from "react"
 
 
 type Props = {
-  value: string
   onChange: (value: string, isError: boolean) => void
+  defaultValue?: string
 }
 
-const workspaceFormItemWebhookUrlFunc: React.FC<Props> = ({ value, onChange: onChangeParent }) => {
-  const [editValue, setEditValue] = React.useState(value)
+const workspaceFormItemWebhookUrlFunc: React.FC<Props> = ({
+  onChange: onChangeParent,
+  defaultValue = ""
+}) => {
   const [isError, setIsError] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
 
   const onChange = async (value: string) => {
-    setEditValue(value)
     onChangeParent(value, !validate(value))
   }
 
@@ -35,16 +36,15 @@ const workspaceFormItemWebhookUrlFunc: React.FC<Props> = ({ value, onChange: onC
   }
 
   React.useEffect(() => {
-    setEditValue(value)
-    validate(value)
-  }, [value])
+    validate(defaultValue)
+  }, [defaultValue])
 
   return (
     <TextField
       required
       label="Webhook URL"
       variant="filled"
-      value={editValue}
+      defaultValue={defaultValue}
       onChange={(e) => onChange(e.target.value)}
       error={isError}
       helperText={isError && errorMessage}

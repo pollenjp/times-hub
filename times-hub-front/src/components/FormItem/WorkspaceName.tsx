@@ -3,17 +3,18 @@ import React from "react"
 
 
 type Props = {
-  value: string
   onChange: (value: string, isError: boolean) => void
+  defaultValue?: string
 }
 
-const workspaceFormItemNameFunc: React.FC<Props> = ({ value, onChange: onChangeParent }) => {
-  const [editValue, setEditValue] = React.useState(value)
+const workspaceFormItemNameFunc: React.FC<Props> = ({
+  onChange: onChangeParent,
+  defaultValue = ""
+}) => {
   const [isError, setIsError] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
 
   const onChange = async (value: string) => {
-    setEditValue(value)
     onChangeParent(value, !validateValue(value))
   }
 
@@ -29,21 +30,23 @@ const workspaceFormItemNameFunc: React.FC<Props> = ({ value, onChange: onChangeP
   }
 
   React.useEffect(() => {
-    setEditValue(value)
-    validateValue(value)
-  }, [value])
+    validateValue(defaultValue)
+  }, [defaultValue])
 
   return (
-    <TextField
-      required
-      label="Workspace Name"
-      variant="filled"
-      value={editValue}
-      onChange={(e) => onChange(e.target.value)}
-      error={isError}
-      helperText={isError && errorMessage}
-      fullWidth
-    ></TextField>
+    <>
+      {console.log(defaultValue)}
+      <TextField
+        required
+        label="Workspace Name"
+        variant="filled"
+        defaultValue={defaultValue}
+        onChange={(e) => onChange(e.target.value)}
+        error={isError}
+        helperText={isError && errorMessage}
+        fullWidth
+      ></TextField>
+    </>
   )
 }
 

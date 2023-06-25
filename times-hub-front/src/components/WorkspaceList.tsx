@@ -1,13 +1,13 @@
 import { Stack } from "@mui/material"
 import React from "react"
 import WorkspaceItem from "./WorkspaceItem"
-import type { Workspace } from "../types/workspace"
+import type { Workspace, UpdateWorkspacePayload } from "../types/workspace"
 
 
 type Props = {
   workspaces: Workspace[]
 
-  onUpdate: (ws: Workspace) => void
+  onUpdate: (ws: UpdateWorkspacePayload) => void
   onDelete: (id: number) => void
   onChecked: (ws: Workspace) => void
 }

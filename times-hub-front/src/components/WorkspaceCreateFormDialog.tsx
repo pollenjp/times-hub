@@ -46,7 +46,7 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
   const defaultWorkspaceIsError = {
     name: true,
     ws_type: false, // because select menu
-    webhook_url: true // TODO: for debug
+    webhook_url: true
   }
 
   // * editIsError can only be used in editIsErrorFromWorkspaceIsError
@@ -120,10 +120,7 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
         >
           <Grid container rowSpacing={2} columnSpacing={5}>
             <Grid item xs={12}>
-              <WorkspaceFormItemName
-                value={wsName}
-                onChange={onChangeWsName}
-              ></WorkspaceFormItemName>
+              <WorkspaceFormItemName onChange={onChangeWsName}></WorkspaceFormItemName>
               <FormControl required variant="filled" fullWidth>
                 <InputLabel id="workspace-type-menu-label">Workspace Type</InputLabel>
                 <Select
@@ -140,8 +137,8 @@ const WorkspaceCreateFormDialog: React.FC<Props> = ({
                 <FormHelperText>Note: Only support slack now.</FormHelperText>
               </FormControl>
               <WorkspaceFormItemWebhookUrl
-                value={wsWebhookUrl}
                 onChange={onChangeWsWebhookUrl}
+                defaultValue={wsWebhookUrl}
               ></WorkspaceFormItemWebhookUrl>
             </Grid>
           </Grid>

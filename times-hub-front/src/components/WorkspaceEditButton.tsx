@@ -2,11 +2,11 @@ import EditIcon from "@mui/icons-material/Edit"
 import IconButton from "@mui/material/IconButton"
 import React from "react"
 import WorkspaceEditFormDialog from "./WorkspaceEditFormDialog"
-import { Workspace } from "../types/workspace"
+import { Workspace, UpdateWorkspacePayload } from "../types/workspace"
 
 
 type Props = {
-  onSubmit: (ws: Workspace) => void
+  onSubmit: (ws: UpdateWorkspacePayload) => void
   workspace: Workspace
 }
 

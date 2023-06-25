@@ -14,15 +14,22 @@ import FormHelperText from "@mui/material/FormHelperText"
 import InputLabel from "@mui/material/InputLabel"
 import MenuItem from "@mui/material/MenuItem"
 import Select from "@mui/material/Select"
+import { SelectChangeEvent } from "@mui/material/Select"
 import React from "react"
-import { Workspace } from "../types/workspace"
+import WorkspaceFormItemName from "./FormItem/WorkspaceName"
+import WorkspaceFormItemWebhookUrl from "./FormItem/WorkspaceWebhookUrl"
+import { UpdateWorkspacePayload, Workspace } from "../types/workspace"
 
 
 type Props = {
   dialogOpenState: boolean
   dialogHandleClose: () => void
-  onSubmit: (ws: Workspace) => void
+  onSubmit: (ws: UpdateWorkspacePayload) => void
   workspace: Workspace
+}
+
+type WorkspaceIsError = {
+  [K in keyof UpdateWorkspacePayload]: boolean
 }
 
 const WorkspaceEditFormDialog: React.FC<Props> = ({
@@ -31,24 +38,76 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
   onSubmit,
   workspace: ws
 }) => {
-  const defaultWorkspace = {
-    id: ws.id,
-    name: ws.name,
-    ws_type: ws.ws_type,
-    webhook_url: ws.webhook_url
-  } as Workspace
-  const [editWorkspace, setEditWorkspace] = React.useState(defaultWorkspace)
+  //////////////////////////////////////
+  // Error state
+  //////////////////////////////////////
+
+  const defaultWorkspaceIsError: WorkspaceIsError = {
+    id: false, // don't check because it is not editable
+    name: false, // because init value is valid
+    ws_type: false, // because select menu (普通のユーザーなら他の値を設定しようが無い)
+    webhook_url: true // because init value is empty
+  }
+
+  // * editIsError can only be used in editIsErrorFromWorkspaceIsError
+  const [isError, editIsError] = React.useState(true)
+  const wsIsError: WorkspaceIsError = { ...defaultWorkspaceIsError }
+  const editWsIsError = (key: keyof WorkspaceIsError, isError: boolean) => {
+    wsIsError[key] = isError
+    editIsError(Object.values(wsIsError).some((v) => v))
+  }
+
+  //////////////////////////////////////
+  // Workspace state
+  //////////////////////////////////////
+
+  const [wsName, editWsName] = React.useState("")
+  const onChangeWsName = React.useCallback(
+    (value: string, isError: boolean): void => {
+      editWsName(value)
+      editWsIsError("name", isError)
+    },
+    [editWsName]
+  )
+  const [wsType, editWsType] = React.useState("slack")
+  const onChangeWsType = React.useCallback(
+    (e: SelectChangeEvent<string>): void => {
+      editWsType(e.target.value)
+      console.log(wsIsError)
+      // skip validation because select menu
+      // editWsIsError("ws_type", false)
+      // editIsErrorFromWorkspaceIsError(workspaceIsError)
+    },
+    [editWsType]
+  )
+  const [wsWebhookUrl, editWsWebhookUrl] = React.useState("") // Empty because saved webhook_url should be secret.
+  const onChangeWsWebhookUrl = React.useCallback(
+    (value: string, isError: boolean): void => {
+      editWsWebhookUrl(value)
+      editWsIsError("webhook_url", isError)
+    },
+    [editWsWebhookUrl]
+  )
+
+  //////////////////////////////////////
+  // メイン処理
+  //////////////////////////////////////
 
   const editWorkspaceHandler = async () => {
-    // TODO: validation
-
-    onSubmit(editWorkspace)
-    setEditWorkspace(defaultWorkspace)
+    onSubmit({
+      id: ws.id, // not change
+      name: wsName === "" ? ws.name : wsName,
+      ws_type: wsType === "" ? ws.ws_type : wsType,
+      webhook_url: wsWebhookUrl
+    })
   }
 
   React.useEffect(() => {
-    setEditWorkspace(ws)
-  }, [ws])
+    editWsName("")
+    editWsType("slack")
+    editWsWebhookUrl("")
+    editIsError(true)
+  }, [dialogOpenState])
 
   return (
     <Dialog open={dialogOpenState} onClose={dialogHandleClose}>
@@ -62,51 +121,28 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
         >
           <Grid container rowSpacing={2} columnSpacing={5}>
             <Grid item xs={12}>
-              <TextField
-                required
-                label="Workspace Name"
-                variant="filled"
-                value={editWorkspace.name}
-                onChange={(e) =>
-                  setEditWorkspace({
-                    ...editWorkspace,
-                    name: e.target.value
-                  })
-                }
-                fullWidth
-              ></TextField>
+              <WorkspaceFormItemName
+                onChange={onChangeWsName}
+                defaultValue={ws.name}
+              ></WorkspaceFormItemName>
               <FormControl required variant="filled" fullWidth>
                 <InputLabel id="workspace-type-menu-label">Workspace Type</InputLabel>
                 <Select
                   labelId="workspace-type-menu-label"
                   id="workspace-type-menu"
                   label="Workspace Type"
-                  value={editWorkspace.ws_type}
-                  onChange={(e) =>
-                    setEditWorkspace({
-                      ...editWorkspace,
-                      ws_type: e.target.value
-                    })
-                  }
+                  defaultValue={ws.ws_type}
+                  onChange={(e) => onChangeWsType(e)}
                 >
                   <MenuItem value={"slack"}>Slack</MenuItem>
+                  <MenuItem value={"discord"}>Discord</MenuItem>
                   {/* <MenuItem value={"discord"}>Discord</MenuItem> */}
                 </Select>
                 <FormHelperText>Note: Only support slack now.</FormHelperText>
               </FormControl>
-              <TextField
-                required
-                label="Webhook URL"
-                variant="filled"
-                value={editWorkspace.webhook_url}
-                onChange={(e) =>
-                  setEditWorkspace({
-                    ...editWorkspace,
-                    webhook_url: e.target.value
-                  })
-                }
-                fullWidth
-              ></TextField>
+              <WorkspaceFormItemWebhookUrl
+                onChange={onChangeWsWebhookUrl}
+              ></WorkspaceFormItemWebhookUrl>
             </Grid>
           </Grid>
         </Box>
@@ -114,7 +150,9 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
       <DialogActions>
         <Button onClick={dialogHandleClose}>Cancel</Button>
         <Button
+          disabled={isError}
           onClick={() => {
+            // TODO: #11
             dialogHandleClose()
             editWorkspaceHandler()
           }}

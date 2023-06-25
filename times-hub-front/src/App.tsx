@@ -7,7 +7,7 @@ import WorkspaceList from "./components/WorkspaceList"
 import { sendMessage } from "./lib/api/message"
 import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
 import { MessagePayload } from "./types/message"
-import { Workspace, WorkspacePayload } from "./types/workspace"
+import { Workspace, WorkspacePayload, UpdateWorkspacePayload } from "./types/workspace"
 
 import "./App.css"
 
@@ -25,7 +25,7 @@ const WorkspaceApp: React.FC = () => {
     setWorkspaces(workspaces)
   }
 
-  const onUpdate = async (ws: Workspace) => {
+  const onUpdate = async (ws: UpdateWorkspacePayload) => {
     await updateWorkspaceItem(ws)
     setWorkspaces(await getWorkspaceItems())
   }

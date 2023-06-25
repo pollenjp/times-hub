@@ -3,12 +3,12 @@ import { Typography, Card, Grid, Stack, Checkbox } from "@mui/material"
 import IconButton from "@mui/material/IconButton"
 import React from "react"
 import WorkspaceEditButton from "./WorkspaceEditButton"
-import type { Workspace } from "../types/workspace"
+import type { Workspace, UpdateWorkspacePayload } from "../types/workspace"
 
 
 type Props = {
   ws: Workspace
-  onUpdate: (ws: Workspace) => void
+  onUpdate: (ws: UpdateWorkspacePayload) => void
   onDelete: (id: number) => void
   onChecked: (ws: Workspace) => void
 }
