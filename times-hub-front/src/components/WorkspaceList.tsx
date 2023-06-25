@@ -1,12 +1,13 @@
+import { Stack } from "@mui/material"
 import React from "react"
-import type { Workspace } from "../types/workspace"
-import { Stack, Typography } from "@mui/material"
 import WorkspaceItem from "./WorkspaceItem"
+import type { Workspace, UpdateWorkspacePayload } from "../types/workspace"
+
 
 type Props = {
   workspaces: Workspace[]
 
-  onUpdate: (ws: Workspace) => void
+  onUpdate: (ws: UpdateWorkspacePayload) => void
   onDelete: (id: number) => void
   onChecked: (ws: Workspace) => void
 }
@@ -14,7 +15,6 @@ type Props = {
 const WorkspaceList: React.FC<Props> = ({ workspaces, onUpdate, onDelete, onChecked }) => {
   return (
     <Stack spacing={2}>
-      <Typography variant="h2">Workspace List</Typography>
       <Stack spacing={2}>
         {workspaces.map((ws) => (
           <WorkspaceItem

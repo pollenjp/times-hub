@@ -1,22 +1,22 @@
-import React from "react"
 import { Box, Stack, Typography } from "@mui/material"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
-
-import { Workspace, NewWorkspacePayload } from "./types/workspace"
-import WorkspaceForm from "./components/WorkspaceForm"
-import WorkspaceList from "./components/WorkspaceList"
+import React from "react"
 import MessageForm from "./components/MessageForm"
-import { addWorkspaceItem, getWorkspaceItems } from "./lib/api/workspace"
-import { MessagePayload } from "./types/message"
+import WorkspaceCreateButton from "./components/WorkspaceCreateButton"
+import WorkspaceList from "./components/WorkspaceList"
 import { sendMessage } from "./lib/api/message"
+import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
+import { MessagePayload } from "./types/message"
+import { Workspace, WorkspacePayload, UpdateWorkspacePayload } from "./types/workspace"
 
 import "./App.css"
+
 
 const WorkspaceApp: React.FC = () => {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([])
   const [checkedIDs, setCheckedIDs] = React.useState<Set<number>>(new Set())
 
-  const onSubmit = async (payload: NewWorkspacePayload) => {
+  const onSubmit = async (payload: WorkspacePayload) => {
     // TODO: validation check
 
     await addWorkspaceItem(payload)
@@ -25,8 +25,9 @@ const WorkspaceApp: React.FC = () => {
     setWorkspaces(workspaces)
   }
 
-  const onUpdate = async (ws: Workspace) => {
-    //
+  const onUpdate = async (ws: UpdateWorkspacePayload) => {
+    await updateWorkspaceItem(ws)
+    setWorkspaces(await getWorkspaceItems())
   }
 
   const onChecked = async (ws: Workspace) => {
@@ -52,6 +53,8 @@ const WorkspaceApp: React.FC = () => {
 
   const onDelete = async (id: number) => {
     checkedIDs.delete(id)
+    // TODO: API request: delete workspace
+    throw new Error("Not implemented")
   }
 
   const onMessageSubmit = async (msg: MessagePayload) => {
@@ -79,7 +82,7 @@ const WorkspaceApp: React.FC = () => {
           p: 2,
           width: "100%",
           height: 80,
-          zIndex: 3,
+          zIndex: 3
         }}
       >
         <Typography variant="h1">times-hub App</Typography>
@@ -89,7 +92,7 @@ const WorkspaceApp: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           p: 5,
-          mt: 10,
+          mt: 10
         }}
       >
         <Stack spacing={2}>
@@ -105,18 +108,19 @@ const WorkspaceApp: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           p: 5,
-          mt: 10,
+          mt: 10
         }}
       >
         <Box maxWidth={700} width="100%">
           <Stack spacing={5}>
+            <Typography variant="h2">Workspace List</Typography>
+            <WorkspaceCreateButton onSubmit={onSubmit} />
             <WorkspaceList
               workspaces={workspaces}
               onUpdate={onUpdate}
               onDelete={onDelete}
               onChecked={onChecked}
             />
-            <WorkspaceForm onSubmit={onSubmit} />
           </Stack>
         </Box>
       </Box>
@@ -127,12 +131,12 @@ const WorkspaceApp: React.FC = () => {
 const theme = createTheme({
   typography: {
     h1: {
-      fontsize: 30,
+      fontsize: 30
     },
     h2: {
-      fontsize: 20,
-    },
-  },
+      fontsize: 20
+    }
+  }
 })
 
 const App: React.FC = () => {

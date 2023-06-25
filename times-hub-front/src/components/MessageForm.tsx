@@ -1,7 +1,7 @@
-import React from "react"
-import type { Workspace } from "../types/workspace"
 import { Button, Grid, TextField, Paper, Box } from "@mui/material"
+import React from "react"
 import { MessagePayload } from "../types/message"
+
 
 type Props = {
   checkedIDs: Set<number>
@@ -14,7 +14,7 @@ const MessageItem: React.FC<Props> = ({ checkedIDs, onSubmit }) => {
   const submitHandler = () => {
     const msg: MessagePayload = {
       targets: Array.from(checkedIDs.values()),
-      text: editText,
+      text: editText
     }
     onSubmit(msg)
     setEditText("")
@@ -24,7 +24,7 @@ const MessageItem: React.FC<Props> = ({ checkedIDs, onSubmit }) => {
     <Paper elevation={2}>
       <Box
         sx={{
-          p: 2,
+          p: 2
         }}
       >
         <Grid container rowSpacing={2} columnSpacing={5}>

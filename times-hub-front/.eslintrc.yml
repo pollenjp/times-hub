@@ -14,4 +14,17 @@ parserOptions:
 plugins:
   - react
   - "@typescript-eslint"
-rules: {}
+  - import
+rules:
+  sort-imports: 0
+  "import/order":
+    - warn
+    - groups:
+        - builtin
+        - external
+        - internal
+      alphabetize:
+        order: asc
+  "import/newline-after-import":
+    - "error"
+    - { "count": 2 }
