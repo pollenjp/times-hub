@@ -1,6 +1,9 @@
 use crate::entity;
+use crate::message::service::get_sender;
+use crate::message::service::Sender;
 use crate::workspace::handler::{repository_error_to_status_code, ValidatedJson};
 use crate::workspace::repository::WorkspaceRepository;
+
 use ::axum::extract::Extension;
 use ::axum::http::StatusCode;
 use ::serde::Deserialize;
@@ -12,11 +15,6 @@ use ::validator::Validate;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
 pub struct MessagePayload {
     pub targets: Vec<entity::WorkspaceId>,
-    pub text: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SlackMessagePayload {
     pub text: String,
 }
 
@@ -49,27 +47,29 @@ where
         .filter(|ws| targets.contains(&ws.id))
         .collect::<Vec<_>>();
 
-    let payload_to_send = SlackMessagePayload { text: payload.text };
+    let mut err_msgs: Vec<String> = vec![];
 
     for ws in ws_vec {
-        tracing::info!("send to webhook: {}", ws.webhook_url);
-        // send to webhook post request
-        let client = reqwest::Client::new();
-        let res = client
-            .post(ws.webhook_url)
-            .json(&payload_to_send)
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("error: {}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
-            });
-        match res {
-            Ok(_) => {}
+        tracing::info!("send to webhook");
+
+        let sender = get_sender(ws.ws_type, ws.webhook_url.as_str(), payload.text.as_str());
+        match sender {
+            Ok(s) => match s.send().await {
+                Ok(_) => {}
+                Err(e) => {
+                    err_msgs.push(e.to_string());
+                }
+            },
             Err(e) => {
-                tracing::error!("error: {}", e);
+                err_msgs.push(e.to_string());
             }
         }
+    }
+
+    // TODO: エラーの詳細を返す
+    if err_msgs.len() > 0 {
+        tracing::error!("error: {:?}", err_msgs);
+        return StatusCode::INTERNAL_SERVER_ERROR;
     }
 
     StatusCode::OK

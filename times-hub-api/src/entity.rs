@@ -4,7 +4,7 @@ pub type WorkspaceId = i32;
 pub enum WorkspaceType {
     #[strum(serialize = "slack")]
     Slack,
-    // Discord, // NotImplemented
+    Discord,
 }
 
 // DBの各Rowに対応した構造体
