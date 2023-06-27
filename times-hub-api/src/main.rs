@@ -1,18 +1,22 @@
 mod entity;
-mod handler;
-mod repository;
-mod service;
+mod message;
+mod workspace;
 
-use axum::routing::{get, post};
-use axum::Extension;
-use axum::Router;
-use dotenv::dotenv;
-use hyper::header::CONTENT_TYPE;
-use sqlx::postgres::PgPool;
-use std::env;
-use std::net::SocketAddr;
-use std::sync::Arc;
-use tower_http::cors::{AllowOrigin, Any, CorsLayer};
+use ::axum::routing::{get, post};
+use ::axum::Extension;
+use ::axum::Router;
+use ::dotenv::dotenv;
+use ::hyper::header::CONTENT_TYPE;
+use ::sqlx::postgres::PgPool;
+use ::std::env;
+use ::std::net::SocketAddr;
+use ::std::sync::Arc;
+use ::tower_http::cors::{AllowOrigin, Any, CorsLayer};
+use message::handler::send_message;
+use workspace::handler::{
+    all_workspaces, create_workspace, delete_workspace, find_workspace, update_workspace,
+};
+use workspace::repository;
 
 fn init_logging() {
     let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
@@ -59,15 +63,15 @@ where
         .route("/", get(root))
         .route(
             "/workspaces",
-            post(handler::create_workspace::<T>).get(handler::all_workspaces::<T>),
+            post(create_workspace::<T>).get(all_workspaces::<T>),
         )
         .route(
             "/workspaces/:id",
-            get(handler::find_workspace::<T>)
-                .patch(handler::update_workspace::<T>)
-                .delete(handler::delete_workspace::<T>),
+            get(find_workspace::<T>)
+                .patch(update_workspace::<T>)
+                .delete(delete_workspace::<T>),
         )
-        .route("/message", post(handler::message::send_message::<T>))
+        .route("/message", post(send_message::<T>))
         .layer(Extension(Arc::new(repo)))
         .layer(
             CorsLayer::new()
