@@ -80,3 +80,15 @@ export const updateWorkspaceItem = async (ws: UpdateWorkspacePayload) => {
   }
   return ws_res
 }
+
+export const deleteWorkspaceItem = async (id: number) => {
+  const res = await fetch(`${db_url_base}/workspaces/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  if (!res.ok) {
+    throw new Error("delete todo request failed")
+  }
+}
