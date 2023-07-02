@@ -31,24 +31,14 @@ const WorkspaceApp: React.FC = () => {
   }
 
   const onChecked = async (ws: Workspace) => {
-    toggleChecked(ws.id)
-
     setWorkspaces(
-      workspaces.map((workspace) => {
-        if (workspace.id === ws.id) {
-          return { ...workspace, checked: !workspace.checked }
+      workspaces.map((w) => {
+        if (w.id === ws.id) {
+          return { ...w, checked: !w.checked }
         }
-        return workspace
+        return w
       })
     )
-  }
-
-  const toggleChecked = (id: number) => {
-    if (checkedIDs.has(id)) {
-      checkedIDs.delete(id)
-    } else {
-      checkedIDs.add(id)
-    }
   }
 
   const onDelete = async (id: number) => {
@@ -57,7 +47,15 @@ const WorkspaceApp: React.FC = () => {
     throw new Error("Not implemented")
   }
 
-  const onMessageSubmit = async (msg: MessagePayload) => {
+  const onMessageSubmit = async (text: string) => {
+    const checkedIDs: Set<number> = new Set()
+    // workspace.checked が true の場合は、checkedIDs に workspace.id を追加する
+    workspaces.map((w) => w.checked && checkedIDs.add(w.id))
+
+    const msg: MessagePayload = {
+      targets: Array.from(checkedIDs),
+      text
+    }
     sendMessage(msg)
   }
 
@@ -99,7 +97,7 @@ const WorkspaceApp: React.FC = () => {
           <Typography variant="h2">Message</Typography>
           <Stack spacing={2}>
             {/* <Typography>{checkedIDs}</Typography> */}
-            <MessageForm checkedIDs={checkedIDs} onSubmit={onMessageSubmit}></MessageForm>
+            <MessageForm onSubmit={onMessageSubmit}></MessageForm>
           </Stack>
         </Stack>
       </Box>

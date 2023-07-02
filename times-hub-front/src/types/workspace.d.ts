@@ -6,6 +6,16 @@ export type Workspace = {
   checked: boolean
 }
 
+type SubsetKeysOf<T> = { [P in keyof T]?: T[P] }
+
+export type WorkspaceDefault = SubsetKeysOf<Workspace> & {
+  checked: boolean
+}
+
+export const WorkspaceDefaultValue: WorkspaceDefault = {
+  checked: false
+}
+
 export type WorkspaceApiResponse = {
   id: number
   name: string
