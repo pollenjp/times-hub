@@ -4,6 +4,7 @@ import type {
   Workspace,
   WorkspaceApiResponse
 } from "../../types/workspace"
+import { getWorkspaceDefaultValue } from "../../types/workspaceDefault"
 
 // TODO: fix hard code url
 const db_url_base = "http://localhost:3000"
@@ -21,10 +22,10 @@ export const addWorkspaceItem = async (payload: WorkspacePayload) => {
   }
   const json: WorkspaceApiResponse = await res.json()
   const ws: Workspace = {
+    ...getWorkspaceDefaultValue(),
     id: json.id,
     name: json.name,
-    ws_type: json.ws_type,
-    checked: false
+    ws_type: json.ws_type
   }
   return ws
 }
@@ -42,10 +43,10 @@ export const getWorkspaceItems = async () => {
   const json: WorkspaceApiResponse[] = await res.json()
   const ws_array: Workspace[] = json.map((ws) => {
     return {
+      ...getWorkspaceDefaultValue(),
       id: ws.id,
       name: ws.name,
-      ws_type: ws.ws_type,
-      checked: false
+      ws_type: ws.ws_type
     }
   })
 
@@ -72,10 +73,10 @@ export const updateWorkspaceItem = async (ws: UpdateWorkspacePayload) => {
   }
   const json: WorkspaceApiResponse = await res.json()
   const ws_res: Workspace = {
+    ...getWorkspaceDefaultValue(),
     id: json.id,
     name: json.name,
-    ws_type: json.ws_type,
-    checked: false
+    ws_type: json.ws_type
   }
   return ws_res
 }
