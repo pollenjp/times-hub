@@ -95,6 +95,7 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
 
   const editWorkspaceHandler = async () => {
     onSubmit({
+      ...ws,
       id: ws.id, // not change
       name: wsName === "" ? ws.name : wsName,
       ws_type: wsType === "" ? ws.ws_type : wsType,

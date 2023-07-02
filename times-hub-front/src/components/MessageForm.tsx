@@ -1,22 +1,16 @@
 import { Button, Grid, TextField, Paper, Box } from "@mui/material"
 import React from "react"
-import { MessagePayload } from "../types/message"
 
 
 type Props = {
-  checkedIDs: Set<number>
-  onSubmit: (msg: MessagePayload) => void
+  onSubmit: (text: string) => void
 }
 
-const MessageItem: React.FC<Props> = ({ checkedIDs, onSubmit }) => {
+const MessageItem: React.FC<Props> = ({ onSubmit }) => {
   const [editText, setEditText] = React.useState("")
 
   const submitHandler = () => {
-    const msg: MessagePayload = {
-      targets: Array.from(checkedIDs.values()),
-      text: editText
-    }
-    onSubmit(msg)
+    onSubmit(editText)
     setEditText("")
   }
 
