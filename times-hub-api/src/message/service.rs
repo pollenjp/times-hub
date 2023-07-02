@@ -56,6 +56,7 @@ impl SlackSender {
 #[async_trait]
 impl Sender for SlackSender {
     async fn send(&self) -> Result<()> {
+        tracing::info!("send to slack webhook");
         let payload = SlackMessagePayload {
             text: self.text.clone(),
         };
@@ -109,6 +110,7 @@ impl DiscordSender {
 #[async_trait]
 impl Sender for DiscordSender {
     async fn send(&self) -> Result<()> {
+        tracing::info!("send to discord webhook");
         let payload = DiscordMessagePayload::new(&self.text);
 
         reqwest::Client::new()

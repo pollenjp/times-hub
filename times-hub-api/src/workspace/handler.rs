@@ -81,8 +81,10 @@ where
     let ws = entity::Workspace {
         id,
         name: payload.name,
-        ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str())
-            .map_err(|_| StatusCode::BAD_REQUEST)?,
+        ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str()).map_err(|_| {
+            tracing::warn!("error: invalid workspace type: {}", payload.ws_type);
+            StatusCode::BAD_REQUEST
+        })?,
         webhook_url: payload.webhook_url,
     };
     let ws = service::update_workspace(repo, ws).await.map_err(|e| {

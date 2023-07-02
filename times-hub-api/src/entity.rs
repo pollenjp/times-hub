@@ -4,6 +4,7 @@ pub type WorkspaceId = i32;
 pub enum WorkspaceType {
     #[strum(serialize = "slack")]
     Slack,
+    #[strum(serialize = "discord")]
     Discord,
 }
 
