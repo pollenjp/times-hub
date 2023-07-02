@@ -1,23 +1,24 @@
 use crate::entity;
-use crate::repository::RepositoryError;
-use crate::repository::WorkspaceRepository;
-use crate::service;
-use anyhow::Result;
-use axum::async_trait;
-use axum::extract::Extension;
-use axum::extract::FromRequest;
-use axum::extract::Path;
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
-use axum::BoxError;
-use axum::Json;
-use http::Request;
-use serde::de::DeserializeOwned;
-use serde::Deserialize;
-use serde::Serialize;
-use std::str::FromStr;
-use std::sync::Arc;
-use validator::Validate;
+use crate::workspace::repository::RepositoryError;
+use crate::workspace::repository::WorkspaceRepository;
+use crate::workspace::service;
+
+use ::anyhow::Result;
+use ::axum::async_trait;
+use ::axum::extract::Extension;
+use ::axum::extract::FromRequest;
+use ::axum::extract::Path;
+use ::axum::http::StatusCode;
+use ::axum::response::IntoResponse;
+use ::axum::BoxError;
+use ::axum::Json;
+use ::http::Request;
+use ::serde::de::DeserializeOwned;
+use ::serde::Deserialize;
+use ::serde::Serialize;
+use ::std::str::FromStr;
+use ::std::sync::Arc;
+use ::validator::Validate;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
 pub struct UpdateWorkspacePayload {
@@ -80,8 +81,10 @@ where
     let ws = entity::Workspace {
         id,
         name: payload.name,
-        ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str())
-            .map_err(|_| StatusCode::BAD_REQUEST)?,
+        ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str()).map_err(|_| {
+            tracing::warn!("error: invalid workspace type: {}", payload.ws_type);
+            StatusCode::BAD_REQUEST
+        })?,
         webhook_url: payload.webhook_url,
     };
     let ws = service::update_workspace(repo, ws).await.map_err(|e| {
@@ -108,8 +111,16 @@ where
         .unwrap_or_else(|e| e)
 }
 
+pub fn repository_error_to_status_code(e: anyhow::Error) -> StatusCode {
+    tracing::error!("error: {}", e);
+    match e.downcast_ref::<RepositoryError>() {
+        Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
 #[derive(Debug)]
-pub struct ValidatedJson<T>(T);
+pub struct ValidatedJson<T>(pub T);
 
 #[async_trait]
 impl<T, S, B> FromRequest<S, B> for ValidatedJson<T>
@@ -135,84 +146,5 @@ where
             (StatusCode::BAD_REQUEST, message)
         })?;
         Ok(ValidatedJson(value))
-    }
-}
-
-fn repository_error_to_status_code(e: anyhow::Error) -> StatusCode {
-    tracing::error!("error: {}", e);
-    match e.downcast_ref::<RepositoryError>() {
-        Some(RepositoryError::NotFound(_)) => StatusCode::NOT_FOUND,
-        _ => StatusCode::INTERNAL_SERVER_ERROR,
-    }
-}
-
-pub mod message {
-    use super::*;
-    use std::collections::HashSet;
-
-    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
-    pub struct MessagePayload {
-        pub targets: Vec<entity::WorkspaceId>,
-        pub text: String,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-    pub struct SlackMessagePayload {
-        pub text: String,
-    }
-
-    // TODO: ビジネスロジックの分離
-    pub async fn send_message<T>(
-        Extension(repo): Extension<Arc<T>>,
-        ValidatedJson(payload): ValidatedJson<MessagePayload>,
-    ) -> StatusCode
-    where
-        T: WorkspaceRepository,
-    {
-        // db から一覧取得
-        let r = repo.all().await.map_err(repository_error_to_status_code);
-        let ws_vec;
-        match r {
-            Ok(w) => {
-                ws_vec = w;
-            }
-            Err(e) => return e,
-        }
-
-        // 一覧から targets に含まれるものを抽出
-        let mut targets = HashSet::new();
-        for id in payload.targets {
-            targets.insert(id);
-        }
-
-        let ws_vec = ws_vec
-            .into_iter()
-            .filter(|ws| targets.contains(&ws.id))
-            .collect::<Vec<_>>();
-
-        let payload_to_send = SlackMessagePayload { text: payload.text };
-
-        for ws in ws_vec {
-            tracing::info!("send to webhook: {}", ws.webhook_url);
-            // send to webhook post request
-            let client = reqwest::Client::new();
-            let res = client
-                .post(ws.webhook_url)
-                .json(&payload_to_send)
-                .send()
-                .await
-                .map_err(|e| {
-                    tracing::error!("error: {}", e);
-                    StatusCode::INTERNAL_SERVER_ERROR
-                });
-            match res {
-                Ok(_) => {}
-                Err(e) => {
-                    tracing::error!("error: {}", e);
-                }
-            }
-        }
-
-        StatusCode::OK
     }
 }

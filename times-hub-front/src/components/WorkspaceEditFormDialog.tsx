@@ -136,7 +136,6 @@ const WorkspaceEditFormDialog: React.FC<Props> = ({
                 >
                   <MenuItem value={"slack"}>Slack</MenuItem>
                   <MenuItem value={"discord"}>Discord</MenuItem>
-                  {/* <MenuItem value={"discord"}>Discord</MenuItem> */}
                 </Select>
                 <FormHelperText>Note: Only support slack now.</FormHelperText>
               </FormControl>
