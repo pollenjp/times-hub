@@ -5,7 +5,12 @@ import MessageForm from "./components/MessageForm"
 import WorkspaceCreateButton from "./components/WorkspaceCreateButton"
 import WorkspaceList from "./components/WorkspaceList"
 import { sendMessage } from "./lib/api/message"
-import { addWorkspaceItem, getWorkspaceItems, updateWorkspaceItem } from "./lib/api/workspace"
+import {
+  addWorkspaceItem,
+  getWorkspaceItems,
+  updateWorkspaceItem,
+  deleteWorkspaceItem
+} from "./lib/api/workspace"
 import { MessagePayload } from "./types/message"
 import { Workspace, WorkspacePayload, UpdateWorkspacePayload } from "./types/workspace"
 
@@ -14,7 +19,6 @@ import "./App.css"
 
 const WorkspaceApp: React.FC = () => {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([])
-  const [checkedIDs, setCheckedIDs] = React.useState<Set<number>>(new Set())
 
   const onSubmit = async (payload: WorkspacePayload) => {
     // TODO: validation check
@@ -42,9 +46,8 @@ const WorkspaceApp: React.FC = () => {
   }
 
   const onDelete = async (id: number) => {
-    checkedIDs.delete(id)
-    // TODO: API request: delete workspace
-    throw new Error("Not implemented")
+    await deleteWorkspaceItem(id)
+    setWorkspaces(await getWorkspaceItems())
   }
 
   const onMessageSubmit = async (text: string) => {
@@ -63,7 +66,6 @@ const WorkspaceApp: React.FC = () => {
   React.useEffect(() => {
     ;(async () => {
       setWorkspaces(await getWorkspaceItems())
-      setCheckedIDs(new Set())
     })()
   }, [])
 
