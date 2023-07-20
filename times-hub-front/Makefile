@@ -1,11 +1,11 @@
 
 .PHONY: build
 build:
-	npm run build
+	npx npm run build
 
 .PHONY: run
 run:
-	npm run start
+	npx npm run start
 
 .PHONY: format
 format:

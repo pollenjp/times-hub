@@ -1,5 +1,15 @@
 # times-hub-front
 
+## Development
+
+### Requirements
+
+Install
+
+```sh
+npx npm install
+```
+
 `.env`
 
 ```.env
