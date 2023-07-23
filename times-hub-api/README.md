@@ -7,7 +7,7 @@
 `.env`
 
 ```.env
-DATABASE_URL="postgres://admin:admin@localhost:5432/workspaces"
+DATABASE_URL="postgres://times-hub:times-hub@localhost:5432/workspaces"
 ```
 
 ```sh

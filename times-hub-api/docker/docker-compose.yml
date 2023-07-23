@@ -10,8 +10,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: admin
-      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: times-hub
+      POSTGRES_USER: times-hub
       POSTGRES_DB: workspaces
       TZ: Asia/Tokyo
     restart: always

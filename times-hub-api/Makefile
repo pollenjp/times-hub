@@ -31,6 +31,11 @@ db-build: ## Build docker compose
 db-up: ## Run docker compose up in the background
 	docker compose ${COMPOSE_ARGS} up -d
 
+.PHONY: db-exec
+db-exec:
+	docker compose ${COMPOSE_ARGS} exec database bash -c \
+	'PGPASSWORD='times-hub' psql --username times-hub --dbname workspaces'
+
 PHNEY: db-down
 db-down: ## Run docker compose down
 	docker compose ${COMPOSE_ARGS} down
