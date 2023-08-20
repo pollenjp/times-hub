@@ -7,13 +7,14 @@ use ::axum::routing::{get, post};
 use ::axum::Extension;
 use ::axum::Router;
 use ::dotenv::dotenv;
+use ::http::header::HeaderValue;
 use ::hyper::header::CONTENT_TYPE;
 use ::sqlx::postgres::PgPool;
 use ::std::env;
 use ::std::net::SocketAddr;
 use ::std::str::FromStr;
 use ::std::sync::Arc;
-use ::tower_http::cors::{Any, CorsLayer};
+use ::tower_http::cors::{AllowOrigin, Any, CorsLayer};
 use message::handler::send_message;
 use workspace::handler::{
     all_workspaces, create_workspace, delete_workspace, find_workspace, update_workspace,
@@ -31,6 +32,7 @@ struct Config {
     // app_host: std::net::IpAddr,
     host_ip: String,
     host_port: u16,
+    allow_origins: Option<Vec<HeaderValue>>,
 }
 
 impl Config {
@@ -40,7 +42,17 @@ impl Config {
             .context("undefined [TIMES_HUB_APP_HOST_PORT]")?
             .parse()
             .context("invalid [TIMES_HUB_APP_HOST_PORT]")?;
-        Ok(Self { host_ip, host_port })
+        // result to optional
+        let allow_origins = match env::var("TIMES_HUB_APP_ALLOW_ORIGINS") {
+            // TODO: parse from json list format
+            Ok(s) => Some(vec![HeaderValue::from_str(s.as_str())?]),
+            Err(_) => None,
+        };
+        Ok(Self {
+            host_ip,
+            host_port,
+            allow_origins,
+        })
     }
 }
 
@@ -98,15 +110,21 @@ async fn main() {
         .unwrap();
 }
 
-fn create_app<T>(repo: T, _: &Config) -> Router
+fn create_app<T>(repo: T, config: &Config) -> Router
 where
     T: repository::WorkspaceRepository,
 {
-    let allow_origins = [
-        // TODO: give from env var
-        "http://localhost:3001".parse().unwrap(),
-    ];
-
+    let mut cors_layer = CorsLayer::new()
+        .allow_methods(Any)
+        .allow_headers(vec![CONTENT_TYPE]);
+    match config.allow_origins.clone() {
+        Some(allow_origins) => {
+            cors_layer = cors_layer.allow_origin(allow_origins);
+        }
+        None => {
+            cors_layer = cors_layer.allow_origin(AllowOrigin::any());
+        }
+    }
     Router::new()
         .route("/", get(root))
         .route(
@@ -121,12 +139,7 @@ where
         )
         .route("/message", post(send_message::<T>))
         .layer(Extension(Arc::new(repo)))
-        .layer(
-            CorsLayer::new()
-                .allow_methods(Any)
-                .allow_headers(vec![CONTENT_TYPE])
-                .allow_origin(allow_origins),
-        )
+        .layer(cors_layer)
 }
 
 async fn root() -> &'static str {
