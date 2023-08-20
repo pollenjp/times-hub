@@ -14,7 +14,7 @@ use ::validator::Validate;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Validate)]
 pub struct MessagePayload {
-    pub targets: Vec<entity::WorkspaceId>,
+    pub targets: Vec<entity::WorkspaceIdTypeAlias>,
     pub text: String,
 }
 
@@ -38,14 +38,14 @@ where
         }
 
         // 一覧から targets に含まれるものを抽出
-        let mut targets = HashSet::new();
+        let mut target_ws_ids = HashSet::new();
         for id in payload.targets {
-            targets.insert(id);
+            target_ws_ids.insert(id);
         }
 
         let ws_vec: Vec<entity::Workspace> = ws_vec
             .into_iter()
-            .filter(|ws| targets.contains(&ws.id))
+            .filter(|ws| target_ws_ids.contains(&ws.id.to_raw()))
             .collect::<Vec<_>>();
 
         let mut err_msgs: Vec<String> = vec![];

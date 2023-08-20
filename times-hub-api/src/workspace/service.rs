@@ -8,7 +8,7 @@ use validator::Validate;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ResponseWorkspace {
-    id: entity::WorkspaceId,
+    id: entity::WorkspaceIdTypeAlias,
     name: String,
     ws_type: String,
 }
@@ -38,7 +38,7 @@ where
 {
     let ws = repo.create(payload).await?;
     Ok(ResponseWorkspace {
-        id: ws.id,
+        id: ws.id.to_raw(),
         name: ws.name,
         ws_type: ws.ws_type.to_string(),
     })
@@ -54,7 +54,7 @@ where
     let ws_vec = ws_vec
         .into_iter()
         .map(|ws| ResponseWorkspace {
-            id: ws.id,
+            id: ws.id.to_raw(),
             name: ws.name,
             ws_type: ws.ws_type.to_string(),
         })
@@ -68,7 +68,7 @@ where
 {
     let ws = repo.find(id).await?;
     Ok(ResponseWorkspace {
-        id: ws.id,
+        id: ws.id.to_raw(),
         name: ws.name,
         ws_type: ws.ws_type.to_string(),
     })
@@ -80,7 +80,7 @@ where
 {
     let ws = repo.update(ws).await?;
     Ok(ResponseWorkspace {
-        id: ws.id,
+        id: ws.id.to_raw(),
         name: ws.name,
         ws_type: ws.ws_type.to_string(),
     })

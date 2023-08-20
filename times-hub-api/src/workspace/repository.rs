@@ -19,7 +19,7 @@ pub enum RepositoryError {
 
 #[derive(Debug, Clone, PartialEq, Eq, FromRow)]
 pub struct WorkspaceDBRow {
-    pub id: entity::WorkspaceId,
+    pub id: entity::WorkspaceIdTypeAlias,
     pub name: String,
     pub ws_type: String,
     pub webhook_url: String,
@@ -58,7 +58,7 @@ pub mod pg {
         async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace> {
             // TODO: payload validation check
             let ws = entity::Workspace {
-                id: 0,
+                id: entity::WorkspaceId::new(0),
                 name: payload.name.clone(),
                 ws_type: entity::WorkspaceType::from_str(payload.ws_type.as_str())?,
                 webhook_url: payload.webhook_url.clone(),
@@ -78,7 +78,7 @@ RETURNING id, name, ws_type, webhook_url
             .await?;
 
             Ok(entity::Workspace {
-                id: ws.id,
+                id: entity::WorkspaceId::new(ws.id),
                 name: ws.name,
                 ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str())?,
                 webhook_url: ws.webhook_url,
@@ -88,10 +88,12 @@ RETURNING id, name, ws_type, webhook_url
         async fn find(&self, id: entity::WorkspaceId) -> Result<entity::Workspace> {
             let ws = sqlx::query_as::<_, WorkspaceDBRow>(
                 r#"
-SELECT * FROM workspaces WHERE id = $1
-            "#,
+                SELECT *
+                FROM workspaces
+                WHERE id = $1
+                "#,
             )
-            .bind(id)
+            .bind(id.to_raw())
             .fetch_one(&self.pool)
             .await
             .map_err(|e| match e {
@@ -100,7 +102,7 @@ SELECT * FROM workspaces WHERE id = $1
             })?;
 
             Ok(entity::Workspace {
-                id: ws.id,
+                id: entity::WorkspaceId::new(ws.id),
                 name: ws.name,
                 ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str())?,
                 webhook_url: ws.webhook_url,
@@ -119,7 +121,7 @@ SELECT * FROM workspaces ORDER BY id DESC
             Ok(ws_vec
                 .into_iter()
                 .map(|ws| entity::Workspace {
-                    id: ws.id,
+                    id: entity::WorkspaceId::new(ws.id),
                     name: ws.name,
                     ws_type: entity::WorkspaceType::from_str(ws.ws_type.as_str()).expect(
                         format!("failed to unwrap WorkspaceType from DBRow: {}", ws.ws_type)
@@ -142,12 +144,12 @@ RETURNING *
             .bind(payload.name)
             .bind(payload.ws_type.to_string())
             .bind(payload.webhook_url)
-            .bind(payload.id)
+            .bind(payload.id.to_raw())
             .fetch_one(&self.pool)
             .await?;
 
             Ok(entity::Workspace {
-                id: ws_row.id,
+                id: entity::WorkspaceId::new(ws_row.id),
                 name: ws_row.name,
                 ws_type: entity::WorkspaceType::from_str(ws_row.ws_type.as_str())?,
                 webhook_url: ws_row.webhook_url,
@@ -157,10 +159,11 @@ RETURNING *
         async fn delete(&self, id: entity::WorkspaceId) -> Result<()> {
             sqlx::query(
                 r#"
-DELETE FROM workspaces WHERE id = $1
-            "#,
+                DELETE FROM workspaces
+                WHERE id = $1
+                "#,
             )
-            .bind(id)
+            .bind(id.to_raw())
             .execute(&self.pool)
             .await
             .map_err(|err| match err {
@@ -228,10 +231,10 @@ pub mod test_utils {
     impl WorkspaceRepository for WorkspaceRepositoryForMemory {
         async fn create(&self, payload: CreateWorkspacePayload) -> Result<entity::Workspace> {
             let mut store = self.write_store_ref();
-            let id = store.len() as entity::WorkspaceId + 1;
+            let id = entity::WorkspaceId::new(store.len() as entity::WorkspaceIdTypeAlias + 1);
             let ws_type = entity::WorkspaceType::from_str(payload.ws_type.as_str())?;
             let ws = entity::Workspace::new(id, payload.name, ws_type, payload.webhook_url);
-            store.insert(id, ws.clone());
+            store.insert(ws.id.clone(), ws.clone());
             Ok(ws)
         }
 
@@ -253,9 +256,9 @@ pub mod test_utils {
             // check if exists
             store
                 .get(&payload.id)
-                .context(RepositoryError::NotFound(payload.id))?;
+                .context(RepositoryError::NotFound(payload.id.clone()))?;
 
-            store.insert(payload.id, payload.clone());
+            store.insert(payload.id.clone(), payload.clone());
             Ok(payload)
         }
 
@@ -289,13 +292,13 @@ pub mod test_utils {
             // 初期データ
             let init_ws_vec = vec![
                 entity::Workspace::new(
-                    1,
+                    entity::WorkspaceId::new(1),
                     "test workspace 1".to_string(),
                     entity::WorkspaceType::Slack,
                     "https://example.com".to_string(),
                 ),
                 entity::Workspace::new(
-                    2,
+                    entity::WorkspaceId::new(2),
                     "test workspace 2".to_string(),
                     entity::WorkspaceType::Slack,
                     "https://example.com".to_string(),
@@ -305,16 +308,16 @@ pub mod test_utils {
             let repo = WorkspaceRepositoryForMemory::new();
             // Add init data
             for data in &init_ws_vec {
-                repo.write_store_ref().insert(data.id, data.clone());
+                repo.write_store_ref().insert(data.id.clone(), data.clone());
             }
 
             // create
-            let manipulate_target_data = entity::Workspace {
-                id: 3,
-                name: "test workspace 3".to_string(),
-                ws_type: entity::WorkspaceType::Slack,
-                webhook_url: "https://example.com".to_string(),
-            };
+            let manipulate_target_data = entity::Workspace::new(
+                entity::WorkspaceId::new(3),
+                "test workspace 3".to_string(),
+                entity::WorkspaceType::Slack,
+                "https://example.com".to_string(),
+            );
             let payload = CreateWorkspacePayload {
                 name: manipulate_target_data.name.clone(),
                 ws_type: manipulate_target_data.ws_type.to_string(),
@@ -328,7 +331,7 @@ pub mod test_utils {
 
             // find
             let ws = repo
-                .find(manipulate_target_data.id)
+                .find(manipulate_target_data.id.clone())
                 .await
                 .expect("failed to find workspace");
             assert_eq!(ws, manipulate_target_data);
@@ -356,7 +359,7 @@ pub mod test_utils {
             // test delete //
             /////////////////
 
-            repo.delete(manipulate_target_data.id)
+            repo.delete(manipulate_target_data.id.clone())
                 .await
                 .expect("failed to delete workspace");
             let mut ws_vec = repo.all().await.expect("failed to get all workspace");

@@ -59,11 +59,12 @@ where
 
 pub async fn find_workspace<T>(
     Extension(repo): Extension<Arc<T>>,
-    Path(id): Path<entity::WorkspaceId>,
+    Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode>
 where
     T: WorkspaceRepository,
 {
+    let id = entity::WorkspaceId::new(id);
     let ws_vec = service::find_workspace(repo, id)
         .await
         .map_err(repository_error_to_status_code)?;
@@ -72,12 +73,13 @@ where
 
 pub async fn update_workspace<T>(
     Extension(repo): Extension<Arc<T>>,
-    Path(id): Path<entity::WorkspaceId>,
+    Path(id): Path<i32>,
     ValidatedJson(payload): ValidatedJson<UpdateWorkspacePayload>,
 ) -> Result<impl IntoResponse, StatusCode>
 where
     T: WorkspaceRepository,
 {
+    let id = entity::WorkspaceId::new(id);
     let ws = entity::Workspace {
         id,
         name: payload.name,
@@ -99,11 +101,12 @@ where
 
 pub async fn delete_workspace<T>(
     Extension(repo): Extension<Arc<T>>,
-    Path(id): Path<entity::WorkspaceId>,
+    Path(id): Path<entity::WorkspaceIdTypeAlias>,
 ) -> StatusCode
 where
     T: WorkspaceRepository,
 {
+    let id = entity::WorkspaceId::new(id);
     service::delete_workspace(repo, id)
         .await
         .map(|_| StatusCode::NO_CONTENT)
