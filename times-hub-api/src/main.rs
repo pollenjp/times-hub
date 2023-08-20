@@ -2,6 +2,7 @@ mod entity;
 mod message;
 mod workspace;
 
+use ::anyhow::{Context, Result};
 use ::axum::routing::{get, post};
 use ::axum::Extension;
 use ::axum::Router;
@@ -10,8 +11,9 @@ use ::hyper::header::CONTENT_TYPE;
 use ::sqlx::postgres::PgPool;
 use ::std::env;
 use ::std::net::SocketAddr;
+use ::std::str::FromStr;
 use ::std::sync::Arc;
-use ::tower_http::cors::{AllowOrigin, Any, CorsLayer};
+use ::tower_http::cors::{Any, CorsLayer};
 use message::handler::send_message;
 use workspace::handler::{
     all_workspaces, create_workspace, delete_workspace, find_workspace, update_workspace,
@@ -24,11 +26,40 @@ fn init_logging() {
     tracing_subscriber::fmt::init();
 }
 
+#[derive(Debug, Clone)]
+struct Config {
+    // app_host: std::net::IpAddr,
+    host_ip: String,
+    host_port: u16,
+}
+
+impl Config {
+    fn load() -> Result<Self> {
+        let host_ip = env::var("TIMES_HUB_APP_HOST_IP").unwrap_or("127.0.0.1".to_string());
+        let host_port = env::var("TIMES_HUB_APP_HOST_PORT")
+            .context("undefined [TIMES_HUB_APP_HOST_PORT]")?
+            .parse()
+            .context("invalid [TIMES_HUB_APP_HOST_PORT]")?;
+        Ok(Self { host_ip, host_port })
+    }
+}
+
 #[tokio::main]
 async fn main() {
     init_logging();
 
     dotenv().ok();
+
+    let config: Config = match Config::load() {
+        Ok(c) => {
+            tracing::debug!("config: {:?}", &c);
+            c
+        }
+        Err(e) => {
+            tracing::error!("loading config: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let use_postgres: bool = true;
     let app;
@@ -40,13 +71,25 @@ async fn main() {
             .expect(&format!("failed to connect to database: {}", database_url));
 
         let repo = repository::pg::WorkspaceRepositoryForDB::new(pool);
-        app = create_app(repo);
+        app = create_app(repo, &config);
     } else {
         let repo = repository::test_utils::WorkspaceRepositoryForMemory::new();
-        app = create_app(repo);
+        app = create_app(repo, &config);
     }
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr =
+        match SocketAddr::from_str(format!("{}:{}", &config.host_ip, &config.host_port).as_str()) {
+            Ok(a) => a,
+            Err(e) => {
+                tracing::error!(
+                    "invalid [TIMES_HUB_APP_HOST:{}] or [TIMES_HUB_APP_PORT:{}]: {}",
+                    &config.host_ip,
+                    &config.host_port,
+                    e
+                );
+                std::process::exit(1);
+            }
+        };
     tracing::debug!("Listening on {}", addr);
 
     axum::Server::bind(&addr)
@@ -55,10 +98,15 @@ async fn main() {
         .unwrap();
 }
 
-fn create_app<T>(repo: T) -> Router
+fn create_app<T>(repo: T, _: &Config) -> Router
 where
     T: repository::WorkspaceRepository,
 {
+    let allow_origins = [
+        // TODO: give from env var
+        "http://localhost:3001".parse().unwrap(),
+    ];
+
     Router::new()
         .route("/", get(root))
         .route(
@@ -77,8 +125,7 @@ where
             CorsLayer::new()
                 .allow_methods(Any)
                 .allow_headers(vec![CONTENT_TYPE])
-                // TODO: Fix hard code
-                .allow_origin(AllowOrigin::exact("http://localhost:3001".parse().unwrap())),
+                .allow_origin(allow_origins),
         )
 }
 

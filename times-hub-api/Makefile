@@ -17,7 +17,10 @@ debug-vars:
 dev:
 	sqlx db create
 	sqlx migrate run
-	RUST_LOG="debug" cargo watch -x run
+	RUST_LOG="debug" \
+		TIMES_HUB_APP_HOST_IP="127.0.0.1" \
+		TIMES_HUB_APP_HOST_PORT="3000" \
+		cargo watch -x run
 
 .PHNEY: test
 test:
